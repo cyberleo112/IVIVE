@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVIVE Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .tab-btn[aria-selected="true"] {
+      background: white; color: #1d4ed8;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .num { font-variant-numeric: tabular-nums; }
+    [hidden] { display: none !important; }
+    .badge-pass { background: #dcfce7; color: #166534; }
+    .badge-fail { background: #fee2e2; color: #991b1b; }
+    .badge-ok   { background: #dbeafe; color: #1e40af; }
+    .badge-err  { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+  <header class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
+    <div class="max-w-6xl mx-auto px-6 py-6">
+      <h1 class="text-2xl font-bold">IVIVE Calculator</h1>
+      <p class="text-blue-100 text-sm mt-1">
+        Predict in vivo hepatic plasma clearance from in vitro intrinsic clearance &middot;
+        Hepatocyte / Microsome &middot; Human, Mouse, Rat, Dog, Monkey
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-6">
+
+    <!-- Tabs -->
+    <div role="tablist" class="inline-flex bg-slate-200 rounded-lg p-1 mb-6">
+      <button class="tab-btn px-4 py-2 text-sm font-medium rounded-md text-slate-700"
+              role="tab" aria-controls="tab-single" data-tab="single" aria-selected="true">
+        Single
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium rounded-md text-slate-700"
+              role="tab" aria-controls="tab-batch" data-tab="batch" aria-selected="false">
+        Batch (Excel)
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium rounded-md text-slate-700"
+              role="tab" aria-controls="tab-validation" data-tab="validation" aria-selected="false">
+        Validation
+      </button>
+    </div>
+
+    <!-- =================== SINGLE TAB =================== -->
+    <section id="tab-single" role="tabpanel">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- INPUT CARD -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-semibold mb-4">Inputs</h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Species</span>
+              <select id="single-species"
+                      class="mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2"></select>
+            </label>
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">In vitro system</span>
+              <select id="single-system"
+                      class="mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2">
+                <option value="hepatocyte">Hepatocytes</option>
+                <option value="microsome">Microsomes</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <label class="block col-span-2">
+              <span class="text-sm font-medium text-slate-700">
+                CLint <span id="single-clint-unit" class="text-slate-500">(uL/min/million cells)</span>
+              </span>
+              <input id="single-clint" type="number" step="any" min="0" value="6.4"
+                     class="mt-1 w-full rounded-md border border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 num" />
+            </label>
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">f<sub>u,inc</sub> (0&ndash;1)</span>
+              <input id="single-fuinc" type="number" step="any" min="0" max="1" value="0.76"
+                     class="mt-1 w-full rounded-md border border-slate-300 shadow-sm text-sm p-2 num" />
+            </label>
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">f<sub>u,p</sub> (0&ndash;1)</span>
+              <input id="single-fup" type="number" step="any" min="0" max="1" value="0.023"
+                     class="mt-1 w-full rounded-md border border-slate-300 shadow-sm text-sm p-2 num" />
+            </label>
+            <label class="block col-span-2">
+              <span class="text-sm font-medium text-slate-700">R<sub>bp</sub> (blood/plasma)</span>
+              <input id="single-rbp" type="number" step="any" min="0" value="0.667"
+                     class="mt-1 w-full rounded-md border border-slate-300 shadow-sm text-sm p-2 num" />
+            </label>
+          </div>
+
+          <details class="mt-5 group">
+            <summary class="cursor-pointer text-sm text-blue-700 font-medium select-none">
+              Advanced &mdash; override species defaults
+            </summary>
+            <div class="grid grid-cols-2 gap-4 mt-3">
+              <label class="block">
+                <span class="text-xs text-slate-600">Q<sub>h</sub> (L/h)</span>
+                <input id="adv-qh" type="number" step="any"
+                       class="mt-1 w-full rounded-md border border-slate-300 text-sm p-2 num" />
+              </label>
+              <label class="block">
+                <span class="text-xs text-slate-600">Liver weight (g)</span>
+                <input id="adv-liver" type="number" step="any"
+                       class="mt-1 w-full rounded-md border border-slate-300 text-sm p-2 num" />
+              </label>
+              <label class="block">
+                <span class="text-xs text-slate-600">HPGL (M cells / g liver)</span>
+                <input id="adv-hpgl" type="number" step="any"
+                       class="mt-1 w-full rounded-md border border-slate-300 text-sm p-2 num" />
+              </label>
+              <label class="block">
+                <span class="text-xs text-slate-600">MPPGL (mg / g liver)</span>
+                <input id="adv-mppgl" type="number" step="any"
+                       class="mt-1 w-full rounded-md border border-slate-300 text-sm p-2 num" />
+              </label>
+            </div>
+            <button id="adv-reset" type="button"
+                    class="mt-2 text-xs text-blue-700 hover:underline">
+              Reset to species defaults
+            </button>
+          </details>
+
+          <div class="mt-6 flex gap-3">
+            <button id="single-calc"
+                    class="px-4 py-2 bg-blue-700 text-white rounded-md font-medium hover:bg-blue-800 transition">
+              Calculate
+            </button>
+            <button id="single-clear"
+                    class="px-4 py-2 bg-slate-200 text-slate-700 rounded-md font-medium hover:bg-slate-300 transition">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- RESULTS CARD -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-semibold mb-4">Predicted in vivo clearance</h2>
+
+          <div id="single-error" hidden class="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800 mb-4"></div>
+          <div id="single-empty" class="text-sm text-slate-500">
+            Enter inputs on the left and click <strong>Calculate</strong>.
+          </div>
+
+          <div id="single-result" hidden class="space-y-5">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Hepatic plasma clearance (CL<sub>p</sub>)</div>
+              <div class="flex items-baseline gap-3">
+                <span id="r-clp-lh" class="num text-3xl font-bold text-blue-700"></span>
+                <span class="text-sm text-slate-500">L/h</span>
+                <span id="r-clp-mlmin" class="num text-base text-slate-700 ml-2"></span>
+                <span class="text-sm text-slate-500">mL/min</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs uppercase tracking-wide text-slate-500">Hepatic extraction ratio (E<sub>h</sub>)</div>
+              <div class="flex items-baseline gap-2">
+                <span id="r-eh" class="num text-3xl font-bold text-indigo-700"></span>
+                <span class="text-sm text-slate-500">%</span>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-200 text-xs text-slate-600">
+              <div><strong>Species:</strong> <span id="r-species"></span> &middot;
+                   <strong>System:</strong> <span id="r-system"></span></div>
+              <div class="mt-1">Q<sub>h</sub>=<span id="r-qh"></span> L/h &middot;
+                   Liver=<span id="r-lw"></span> g &middot;
+                   HPGL=<span id="r-hpgl"></span> &middot;
+                   MPPGL=<span id="r-mppgl"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reference table -->
+      <div class="bg-white rounded-xl shadow p-6 mt-6">
+        <h3 class="text-sm font-semibold mb-3">Default species scaling factors</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm num">
+            <thead class="bg-slate-100 text-slate-600">
+              <tr>
+                <th class="text-left p-2">Species</th>
+                <th class="text-right p-2">Q<sub>h</sub> (L/h)</th>
+                <th class="text-right p-2">Liver (g)</th>
+                <th class="text-right p-2">HPGL (M/g)</th>
+                <th class="text-right p-2">MPPGL (mg/g)</th>
+              </tr>
+            </thead>
+            <tbody id="species-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== BATCH TAB =================== -->
+    <section id="tab-batch" role="tabpanel" hidden>
+      <div class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-2">Batch processing</h2>
+        <p class="text-sm text-slate-600 mb-4">
+          Upload an Excel <code>.xlsx</code> (or CSV) file with one row per compound. Use the
+          template to see required columns and example rows. Per-row override columns let you
+          customize species defaults if needed.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <a id="dl-template"
+             class="px-4 py-2 bg-slate-700 text-white rounded-md text-sm font-medium hover:bg-slate-800 cursor-pointer">
+            Download template (.xlsx)
+          </a>
+          <label class="px-4 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 cursor-pointer">
+            <span id="upload-label">Choose file</span>
+            <input id="batch-file" type="file" accept=".xlsx,.xlsm,.csv" class="hidden" />
+          </label>
+          <button id="run-batch"
+                  class="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+                  disabled>
+            Run batch
+          </button>
+          <span id="batch-summary" class="text-sm text-slate-600"></span>
+        </div>
+
+        <div id="batch-error" hidden class="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800 mt-4"></div>
+
+        <div id="batch-results-wrap" hidden class="mt-6">
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <button id="dl-xlsx"
+                    class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-md text-sm font-medium hover:bg-slate-300">
+              Download .xlsx
+            </button>
+            <button id="dl-csv"
+                    class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-md text-sm font-medium hover:bg-slate-300">
+              Download .csv
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm num">
+              <thead class="bg-slate-100 text-slate-600">
+                <tr>
+                  <th class="text-left p-2">#</th>
+                  <th class="text-left p-2">Compound</th>
+                  <th class="text-left p-2">Species</th>
+                  <th class="text-left p-2">System</th>
+                  <th class="text-right p-2">CL<sub>p</sub> (L/h)</th>
+                  <th class="text-right p-2">CL<sub>p</sub> (mL/min)</th>
+                  <th class="text-right p-2">E<sub>h</sub> (%)</th>
+                  <th class="text-left p-2">Status</th>
+                </tr>
+              </thead>
+              <tbody id="batch-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== VALIDATION TAB =================== -->
+    <section id="tab-validation" role="tabpanel" hidden>
+      <div class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-2">Validation against IVIVE validation.md</h2>
+        <p class="text-sm text-slate-600 mb-4">
+          Runs the 11 reference cases (6 hepatocyte + 5 microsome) and compares predicted to
+          expected values. A case passes if CL<sub>p</sub> is within the relative tolerance and
+          E<sub>h</sub> within the absolute tolerance (in percentage points).
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <button id="run-validation"
+                  class="px-4 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800">
+            Run validation
+          </button>
+          <span id="validation-summary" class="text-sm text-slate-700"></span>
+        </div>
+
+        <div id="validation-wrap" hidden class="overflow-x-auto">
+          <table class="min-w-full text-sm num">
+            <thead class="bg-slate-100 text-slate-600">
+              <tr>
+                <th class="text-left p-2">Case</th>
+                <th class="text-left p-2">Compound</th>
+                <th class="text-left p-2">Species</th>
+                <th class="text-left p-2">System</th>
+                <th class="text-right p-2">Expected CL<sub>p</sub></th>
+                <th class="text-right p-2">Predicted CL<sub>p</sub></th>
+                <th class="text-right p-2">% diff</th>
+                <th class="text-right p-2">Expected E<sub>h</sub> (%)</th>
+                <th class="text-right p-2">Predicted E<sub>h</sub> (%)</th>
+                <th class="text-right p-2">Δ pp</th>
+                <th class="text-left p-2">Result</th>
+              </tr>
+            </thead>
+            <tbody id="validation-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-10 text-center text-xs text-slate-500">
+      Well-stirred model &middot; CL<sub>h,p</sub> = R<sub>bp</sub> Q<sub>h</sub> CL<sub>int,u,liver</sub> / (CL<sub>int,u,liver</sub> + Q<sub>h</sub> R<sub>bp</sub> / f<sub>u,p</sub>)
+    </footer>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
