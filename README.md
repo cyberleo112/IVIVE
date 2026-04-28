@@ -153,6 +153,59 @@ Hepatocyte and Microsomes Clearance IVIVE.py   # original CLI (now imports app.c
 IVIVE validation.md                             # source of validation cases
 ```
 
+## Deploy to Firebase + Cloud Run
+
+The app is deployed as two pieces, both inside the `ivive-2273c` GCP/Firebase
+project:
+
+- **Static frontend** (`static/`) → Firebase Hosting, served from
+  `https://ivive-2273c.web.app` (and `https://ivive-2273c.firebaseapp.com`).
+- **FastAPI backend** (`app/`, packaged via the included `Dockerfile`) →
+  Cloud Run service `ivive-api` in `us-central1`. Firebase Hosting rewrites
+  any request matching `/api/**` to this Cloud Run service (see
+  `firebase.json`), so the frontend keeps calling `/api/...` with no CORS
+  changes.
+
+### One-time setup
+
+```bash
+brew install --cask google-cloud-sdk        # or use the official installer
+npm install -g firebase-tools
+
+gcloud auth login
+gcloud auth application-default login
+firebase login
+
+gcloud config set project ivive-2273c
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  --project=ivive-2273c
+```
+
+### Deploy
+
+```bash
+./deploy.sh             # backend (Cloud Run) + hosting
+./deploy.sh backend     # backend only
+./deploy.sh hosting     # hosting only
+```
+
+Under the hood:
+
+1. `gcloud run deploy ivive-api --source=.` builds the `Dockerfile` with Cloud
+   Build, pushes the image, and deploys it to Cloud Run as a public service.
+2. `firebase deploy --only hosting` uploads `static/` to Firebase Hosting.
+   The `/api/**` rewrite already points at the `ivive-api` Cloud Run service.
+
+### Frontend Firebase SDK
+
+`static/firebase-init.js` initializes the Firebase JS SDK (Analytics) using
+the project's public web config. The `apiKey` value is a public client
+identifier — access is controlled by Firebase Security Rules and the
+authorized-domains list, not by hiding this value.
+
 ## Roadmap
 
 - Add database persistence for runs and uploaded compounds.
