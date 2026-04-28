@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
 from app.core import (
     SPECIES_DEFAULTS,
@@ -25,22 +26,42 @@ from app.core import (
 
 INPUT_COLUMNS: List[Tuple[str, str]] = [
     ("compound_id", "Free-text label for the compound (optional)."),
-    ("species", "human | mouse | rat | dog | monkey (or cyno)."),
-    ("system", "hepatocyte | microsome."),
-    ("clint_in_vitro", "uL/min/million cells (hep) OR uL/min/mg (microsome)."),
-    ("fu_inc", "Fraction unbound in incubation (0-1, e.g. 0.76)."),
-    ("fu_p", "Fraction unbound in plasma (0-1, e.g. 0.023)."),
-    ("rbp", "Blood-to-plasma concentration ratio."),
+    ("species", "Pick from dropdown: human | mouse | rat | dog | monkey."),
+    ("system", "Pick from dropdown: hepatocyte | microsome."),
+    ("clint_in_vitro", "In vitro CLint. Units: uL/min/million cells (hepatocyte) OR uL/min/mg microsomal protein (microsome). Must be > 0."),
+    ("fu_inc", "Fraction unbound in incubation. Range: 0 < fu_inc <= 1 (e.g. 0.76)."),
+    ("fu_p", "Fraction unbound in plasma. Range: 0 < fu_p <= 1 (e.g. 0.023)."),
+    ("rbp", "Blood-to-plasma concentration ratio (>0, e.g. 0.667)."),
     ("liver_blood_flow_L_per_h", "Optional override for Qh (L/h)."),
     ("liver_weight_g", "Optional override for liver weight (g)."),
     ("hpgl", "Optional override for hepatocytes (million cells / g liver)."),
     ("mppgl", "Optional override for microsomal protein (mg / g liver)."),
 ]
 
+# Pretty header text shown in the Inputs sheet (units / range hints).
+HEADER_DISPLAY: Dict[str, str] = {
+    "compound_id": "compound_id",
+    "species": "species (dropdown)",
+    "system": "system (dropdown)",
+    "clint_in_vitro": "clint_in_vitro (uL/min/million cells [hep] or uL/min/mg [mic])",
+    "fu_inc": "fu_inc (0 < value <= 1)",
+    "fu_p": "fu_p (0 < value <= 1)",
+    "rbp": "rbp (blood/plasma, > 0)",
+    "liver_blood_flow_L_per_h": "liver_blood_flow_L_per_h (L/h, optional)",
+    "liver_weight_g": "liver_weight_g (g, optional)",
+    "hpgl": "hpgl (million cells / g liver, optional)",
+    "mppgl": "mppgl (mg / g liver, optional)",
+}
+
+# Allowed values for the species/system dropdowns in the template.
+SPECIES_DROPDOWN_VALUES: List[str] = ["human", "mouse", "rat", "dog", "monkey"]
+SYSTEM_DROPDOWN_VALUES: List[str] = ["hepatocyte", "microsome"]
+
 OUTPUT_COLUMNS: List[str] = [
     "clp_L_per_h",
     "clp_mL_per_min",
     "eh_percent",
+    "clearance_classification",
     "status",
     "error_message",
 ]
@@ -86,18 +107,106 @@ def build_template_workbook() -> bytes:
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill("solid", fgColor="2563EB")
 
-    headers = [c[0] for c in INPUT_COLUMNS]
+    column_keys = [c[0] for c in INPUT_COLUMNS]
+    headers = [HEADER_DISPLAY.get(k, k) for k in column_keys]
     ws.append(headers)
     for cell in ws[1]:
         cell.font = header_font
         cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+    ws.row_dimensions[1].height = 32
 
     for row in EXAMPLE_ROWS:
-        ws.append([row.get(col, None) for col in headers])
+        ws.append([row.get(col, None) for col in column_keys])
 
     _autosize(ws)
     ws.freeze_panes = "A2"
+
+    species_col_idx = column_keys.index("species") + 1
+    system_col_idx = column_keys.index("system") + 1
+    species_letter = get_column_letter(species_col_idx)
+    system_letter = get_column_letter(system_col_idx)
+
+    species_values = ",".join(SPECIES_DROPDOWN_VALUES)
+    system_values = ",".join(SYSTEM_DROPDOWN_VALUES)
+
+    species_dv = DataValidation(
+        type="list",
+        formula1=f'"{species_values}"',
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="Invalid species",
+        error="Pick one of: " + ", ".join(SPECIES_DROPDOWN_VALUES),
+        promptTitle="Species",
+        prompt="Choose: " + ", ".join(SPECIES_DROPDOWN_VALUES),
+    )
+    species_dv.showInputMessage = True
+    species_dv.add(f"{species_letter}2:{species_letter}1048576")
+    ws.add_data_validation(species_dv)
+
+    system_dv = DataValidation(
+        type="list",
+        formula1=f'"{system_values}"',
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="Invalid system",
+        error="Pick one of: " + ", ".join(SYSTEM_DROPDOWN_VALUES),
+        promptTitle="In vitro system",
+        prompt="Choose: " + ", ".join(SYSTEM_DROPDOWN_VALUES),
+    )
+    system_dv.showInputMessage = True
+    system_dv.add(f"{system_letter}2:{system_letter}1048576")
+    ws.add_data_validation(system_dv)
+
+    fu_inc_letter = get_column_letter(column_keys.index("fu_inc") + 1)
+    fu_p_letter = get_column_letter(column_keys.index("fu_p") + 1)
+    fu_inc_dv = DataValidation(
+        type="decimal",
+        operator="between",
+        formula1=0,
+        formula2=1,
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="fu_inc out of range",
+        error="fu_inc must be a fraction between 0 and 1.",
+        promptTitle="fu_inc",
+        prompt="Fraction unbound in incubation (0 < value <= 1).",
+    )
+    fu_inc_dv.showInputMessage = True
+    fu_inc_dv.add(f"{fu_inc_letter}2:{fu_inc_letter}1048576")
+    ws.add_data_validation(fu_inc_dv)
+
+    fu_p_dv = DataValidation(
+        type="decimal",
+        operator="between",
+        formula1=0,
+        formula2=1,
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="fu_p out of range",
+        error="fu_p must be a fraction between 0 and 1.",
+        promptTitle="fu_p",
+        prompt="Fraction unbound in plasma (0 < value <= 1).",
+    )
+    fu_p_dv.showInputMessage = True
+    fu_p_dv.add(f"{fu_p_letter}2:{fu_p_letter}1048576")
+    ws.add_data_validation(fu_p_dv)
+
+    clint_letter = get_column_letter(column_keys.index("clint_in_vitro") + 1)
+    clint_dv = DataValidation(
+        type="decimal",
+        operator="greaterThanOrEqual",
+        formula1=0,
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="CLint out of range",
+        error="CLint must be >= 0.",
+        promptTitle="CLint (in vitro)",
+        prompt="uL/min/million cells (hepatocyte) or uL/min/mg microsomal protein (microsome).",
+    )
+    clint_dv.showInputMessage = True
+    clint_dv.add(f"{clint_letter}2:{clint_letter}1048576")
+    ws.add_data_validation(clint_dv)
 
     instr = wb.create_sheet("Instructions")
     instr["A1"] = "IVIVE batch input template"
@@ -161,25 +270,49 @@ def _coerce_str(value: Any) -> Optional[str]:
     return s if s else None
 
 
+def _canonicalize_header(raw: Any) -> Optional[str]:
+    """Map a header cell (which may include unit/range hints) to a canonical key.
+
+    Examples:
+      'fu_inc (0 < value <= 1)' -> 'fu_inc'
+      'species (dropdown)'      -> 'species'
+      'clint_in_vitro'          -> 'clint_in_vitro'
+    Unknown headers return None.
+    """
+    if raw is None:
+        return None
+    text = str(raw).strip().lower()
+    if not text:
+        return None
+    valid_keys = {c[0] for c in INPUT_COLUMNS}
+    if text in valid_keys:
+        return text
+    # Take the leading token before any whitespace or '(' as a canonical key.
+    head = text.split("(", 1)[0].strip().split()[0] if text else ""
+    if head in valid_keys:
+        return head
+    return None
+
+
 def parse_uploaded_file(filename: str, content: bytes) -> List[Dict[str, Any]]:
     """Parse an uploaded .xlsx or .csv file into a list of row dicts.
 
-    Each row dict contains the lowercase column names from `INPUT_COLUMNS`.
+    Each row dict contains the canonical column keys from `INPUT_COLUMNS`.
+    Headers may include unit/range hints in parentheses (matching the template).
     Unknown columns are ignored. Empty rows are skipped.
     """
     name = (filename or "").lower()
     rows: List[Dict[str, Any]] = []
-    valid_keys = {c[0] for c in INPUT_COLUMNS}
 
     if name.endswith(".csv"):
         text = content.decode("utf-8-sig", errors="replace")
         reader = csv.DictReader(io.StringIO(text))
         for raw in reader:
-            row = {
-                k.strip().lower(): v
-                for k, v in raw.items()
-                if k and k.strip().lower() in valid_keys
-            }
+            row: Dict[str, Any] = {}
+            for k, v in raw.items():
+                key = _canonicalize_header(k)
+                if key is not None:
+                    row[key] = v
             if any((v is not None and str(v).strip() != "") for v in row.values()):
                 rows.append(row)
         return rows
@@ -198,16 +331,14 @@ def parse_uploaded_file(filename: str, content: bytes) -> List[Dict[str, Any]]:
         header = next(iterator)
     except StopIteration:
         return []
-    header_keys = [
-        (str(h).strip().lower() if h is not None else None) for h in header
-    ]
+    header_keys = [_canonicalize_header(h) for h in header]
 
     for raw in iterator:
         if raw is None or all(v is None or str(v).strip() == "" for v in raw):
             continue
-        row: Dict[str, Any] = {}
+        row = {}
         for key, val in zip(header_keys, raw):
-            if key in valid_keys:
+            if key is not None:
                 row[key] = val
         if row:
             rows.append(row)
@@ -268,6 +399,7 @@ def process_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     "hepatic_plasma_clearance_mL_per_min": result.hepatic_plasma_clearance_mL_per_min,
                     "extraction_ratio_plasma": result.extraction_ratio_plasma,
                     "extraction_ratio_percent": result.extraction_ratio_plasma * 100.0,
+                    "clearance_classification": result.clearance_classification,
                 },
             })
         except Exception as exc:  # noqa: BLE001
@@ -302,6 +434,7 @@ def _row_for_export(row: Dict[str, Any]) -> List[Any]:
         res.get("hepatic_plasma_clearance_L_per_h"),
         res.get("hepatic_plasma_clearance_mL_per_min"),
         res.get("extraction_ratio_percent"),
+        res.get("clearance_classification"),
         row.get("status"),
         row.get("error_message"),
     ]
@@ -345,6 +478,9 @@ def export_results_csv(results: List[Dict[str, Any]]) -> bytes:
 __all__ = [
     "INPUT_COLUMNS",
     "OUTPUT_COLUMNS",
+    "HEADER_DISPLAY",
+    "SPECIES_DROPDOWN_VALUES",
+    "SYSTEM_DROPDOWN_VALUES",
     "build_template_workbook",
     "parse_uploaded_file",
     "process_rows",

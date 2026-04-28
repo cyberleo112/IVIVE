@@ -93,6 +93,7 @@ def _to_calculate_response(*, ivive_input, result, compound_id, species_key):
         hepatic_plasma_clearance_mL_per_min=result.hepatic_plasma_clearance_mL_per_min,
         extraction_ratio_plasma=result.extraction_ratio_plasma,
         extraction_ratio_percent=result.extraction_ratio_plasma * 100.0,
+        clearance_classification=result.clearance_classification,
     )
 
 

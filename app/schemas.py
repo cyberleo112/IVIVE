@@ -47,6 +47,7 @@ class CalculateResponse(BaseModel):
     hepatic_plasma_clearance_mL_per_min: float
     extraction_ratio_plasma: float
     extraction_ratio_percent: float
+    clearance_classification: str
 
 
 class SpeciesDefaultsResponse(BaseModel):

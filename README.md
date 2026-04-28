@@ -24,6 +24,22 @@ E_h            = CL_p / (R_bp * Q_h)
 Where `scaling` is HPGL (M cells / g liver) for hepatocytes or MPPGL (mg / g
 liver) for microsomes.
 
+### Clearance classification
+
+The predicted hepatic extraction ratio (`E_h`, expressed as a percentage) is
+classified as:
+
+| Class    | Criterion             |
+| -------- | --------------------- |
+| Low      | `E_h < 30%`           |
+| Moderate | `30% <= E_h <= 70%`   |
+| High     | `E_h > 70%`           |
+
+The classification is returned by the API as
+`clearance_classification` on the single calculation response and on each batch
+row, and is also shown in the UI under "Predicted in vivo clearance" and as a
+column in the batch results table / exported file.
+
 ## Quick start
 
 Requires Python 3.10+.
@@ -55,9 +71,14 @@ Three tabs:
 
 1. **Single** — pick species + system, enter CLint, fu_inc, fu_p, Rbp; an
   optional Advanced section lets you override Q_h, liver weight, HPGL, MPPGL.
+  The result panel shows `CL_p`, `E_h`, and a Low / Moderate / High
+  classification.
 2. **Batch (Excel)** — download the input template, fill it in, upload, and
-  run. Per-row override columns are supported for any compound. Results can
-   be downloaded as `.xlsx` or `.csv`.
+  run. Species and in-vitro system are dropdowns in the template; CLint /
+  fu_inc / fu_p columns show units and accepted ranges (matching the single
+  UI). Per-row override columns are supported for any compound. Results
+  include a clearance classification column and can be downloaded as `.xlsx`
+  or `.csv`.
 3. **Validation** — runs the 11 reference cases and reports pass/fail with
   tolerances ±2% on CL_p and ±0.5 pp on E_h.
 
@@ -95,12 +116,24 @@ curl -s http://localhost:8000/api/calculate \
 `clint_in_vitro`, `fu_inc`, `fu_p`, `rbp`, plus optional override columns
 `liver_blood_flow_L_per_h`, `liver_weight_g`, `hpgl`, `mppgl`. Two example
 rows are pre-filled.
+  - **Dropdowns** — `species` is a dropdown with `human / mouse / rat / dog /
+    monkey`, and `system` is a dropdown with `hepatocyte / microsome`.
+  - **Units & ranges in headers** — `clint_in_vitro` shows
+    `uL/min/million cells (hep) or uL/min/mg (mic)`, and `fu_inc` / `fu_p`
+    show the accepted `0 < value <= 1` range, matching the single-compound UI.
+    Excel data validation also enforces these ranges and CLint >= 0.
 - **Instructions** — units, accepted aliases, and a reference table of species
 defaults.
 
 Aliases accepted in the `species` column: `human`/`man`, `mouse`/`mice`,
 `rat`, `dog`/`beagle`, `cyno`/`cynomolgus`/`monkey`/`nhp`. The `system` column
-accepts `hepatocyte`/`hep` or `microsome`/`mlm`/`rlm`/`hmm`.
+accepts `hepatocyte`/`hep` or `microsome`/`mlm`/`rlm`/`hmm`. Headers may
+include unit/range hints in parentheses (matching the template); they are
+stripped automatically when parsing.
+
+Exported batch result files include a `clearance_classification` column
+(Low / Moderate / High) alongside `clp_L_per_h`, `clp_mL_per_min`, and
+`eh_percent`.
 
 ## Project layout
 

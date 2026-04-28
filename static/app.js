@@ -151,6 +151,7 @@ async function runSingleCalculation() {
     $("r-clp-lh").textContent    = fmtNum(data.hepatic_plasma_clearance_L_per_h, 4);
     $("r-clp-mlmin").textContent = fmtNum(data.hepatic_plasma_clearance_mL_per_min, 4);
     $("r-eh").textContent        = fmtNum(data.extraction_ratio_percent, 4);
+    setClassBadge($("r-class"), data.clearance_classification);
     $("r-species").textContent   = data.species;
     $("r-system").textContent    = data.system;
     const u = data.inputs_used;
@@ -237,6 +238,7 @@ async function runBatch() {
           <td class="p-2 text-right">${fmtNum(res.hepatic_plasma_clearance_L_per_h, 4)}</td>
           <td class="p-2 text-right">${fmtNum(res.hepatic_plasma_clearance_mL_per_min, 4)}</td>
           <td class="p-2 text-right">${fmtNum(res.extraction_ratio_percent, 4)}</td>
+          <td class="p-2 text-left">${classificationBadgeHtml(res.clearance_classification)}</td>
           <td class="p-2 text-left">${okBadge}${r.error_message ? `<div class="text-xs text-red-700 mt-0.5">${escapeHtml(r.error_message)}</div>` : ""}</td>
         </tr>
       `;
@@ -276,6 +278,30 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
   ));
+}
+
+function classificationBadgeHtml(classification) {
+  if (!classification) return "";
+  const c = String(classification).toLowerCase();
+  const cls = c === "low" ? "badge-low"
+            : c === "high" ? "badge-high"
+            : "badge-moderate";
+  return `<span class="${cls} px-2 py-0.5 rounded text-xs font-semibold">${escapeHtml(classification)}</span>`;
+}
+
+function setClassBadge(el, classification) {
+  if (!el) return;
+  el.classList.remove("badge-low", "badge-moderate", "badge-high");
+  if (!classification) {
+    el.textContent = "—";
+    return;
+  }
+  const c = String(classification).toLowerCase();
+  const cls = c === "low" ? "badge-low"
+            : c === "high" ? "badge-high"
+            : "badge-moderate";
+  el.classList.add(cls);
+  el.textContent = classification;
 }
 
 // ---------- Validation ----------

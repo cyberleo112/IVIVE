@@ -75,6 +75,11 @@ def print_result(result: IVIVEResult, inputs: IVIVEInput) -> None:
     print(f"Predicted hepatic plasma clearance: {result.hepatic_plasma_clearance_L_per_h:.6g} L/h")
     print(f"Predicted hepatic plasma clearance: {result.hepatic_plasma_clearance_mL_per_min:.6g} mL/min")
     print(f"Plasma extraction ratio: {result.extraction_ratio_plasma:.6g}")
+    print(
+        f"Hepatic extraction ratio (Eh): {result.extraction_ratio_plasma * 100:.4g}% "
+        f"-> {result.clearance_classification} clearance "
+        f"(Low <30%, Moderate 30-70%, High >70%)"
+    )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

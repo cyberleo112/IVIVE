@@ -49,6 +49,30 @@ class IVIVEResult:
     hepatic_plasma_clearance_mL_per_min: float
     plasma_liver_flow_L_per_h: float
     extraction_ratio_plasma: float
+    clearance_classification: str
+
+
+# Clearance classification thresholds based on hepatic extraction ratio (Eh):
+#   Low      : Eh < 30%
+#   Moderate : 30% <= Eh <= 70%
+#   High     : Eh > 70%
+CLEARANCE_LOW_MAX_PERCENT: float = 30.0
+CLEARANCE_HIGH_MIN_PERCENT: float = 70.0
+
+
+def classify_clearance(extraction_ratio_percent: float) -> str:
+    """Return 'Low', 'Moderate', or 'High' based on hepatic extraction ratio (%).
+
+    Criteria:
+      - Low      when Eh < 30%
+      - Moderate when 30% <= Eh <= 70%
+      - High     when Eh > 70%
+    """
+    if extraction_ratio_percent < CLEARANCE_LOW_MAX_PERCENT:
+        return "Low"
+    if extraction_ratio_percent > CLEARANCE_HIGH_MIN_PERCENT:
+        return "High"
+    return "Moderate"
 
 
 SPECIES_DEFAULTS: Dict[str, SpeciesScalingFactor] = {
@@ -165,6 +189,7 @@ def calculate_hepatic_clearance(inputs: IVIVEInput) -> IVIVEResult:
         hepatic_plasma_clearance_mL_per_min=hepatic_plasma_clearance_mL_per_min,
         plasma_liver_flow_L_per_h=plasma_liver_flow_L_per_h,
         extraction_ratio_plasma=extraction_ratio_plasma,
+        clearance_classification=classify_clearance(extraction_ratio_plasma * 100.0),
     )
 
 
