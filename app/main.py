@@ -3,17 +3,19 @@
 import os
 from typing import Any, Dict, List
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app import batch as batch_mod
 from app.core import (
-    SPECIES_DEFAULTS,
+    MODEL_DEFAULTS,
+    MODEL_DISPLAY,
     SPECIES_DISPLAY,
     calculate_hepatic_clearance,
     make_input_from_species,
+    normalize_model,
     normalize_species,
 )
 from app.schemas import (
@@ -51,26 +53,37 @@ app.add_middleware(
 
 
 @app.get("/api/species", response_model=List[SpeciesDefaultsResponse])
-def get_species() -> List[SpeciesDefaultsResponse]:
+def get_species(model: str = "gastroplus") -> List[SpeciesDefaultsResponse]:
     """Return canonical species keys, display labels, and default scaling factors."""
+    try:
+        model_key = normalize_model(model, allow_both=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    model_keys = list(MODEL_DEFAULTS.keys()) if model_key == "both" else [model_key]
     out: List[SpeciesDefaultsResponse] = []
-    for key, sf in SPECIES_DEFAULTS.items():
-        out.append(SpeciesDefaultsResponse(
-            key=key,
-            label=SPECIES_DISPLAY[key],
-            weight_kg=sf.weight_kg,
-            gender_default=sf.gender_default,
-            liver_blood_flow_L_per_h=sf.liver_blood_flow_L_per_h,
-            liver_weight_g=sf.liver_weight_g,
-            hepatocytes_million_per_g_liver=sf.hepatocytes_million_per_g_liver,
-            microsomal_protein_mg_per_g_liver=sf.microsomal_protein_mg_per_g_liver,
-        ))
+    for source_key in model_keys:
+        for key, sf in MODEL_DEFAULTS[source_key].items():
+            out.append(SpeciesDefaultsResponse(
+                model=source_key,
+                model_label=MODEL_DISPLAY[source_key],
+                key=key,
+                label=SPECIES_DISPLAY[key],
+                weight_kg=sf.weight_kg,
+                gender_default=sf.gender_default,
+                liver_blood_flow_L_per_h=sf.liver_blood_flow_L_per_h,
+                liver_weight_g=sf.liver_weight_g,
+                hepatocytes_million_per_g_liver=sf.hepatocytes_million_per_g_liver,
+                microsomal_protein_mg_per_g_liver=sf.microsomal_protein_mg_per_g_liver,
+            ))
     return out
 
 
 def _to_calculate_response(*, ivive_input, result, compound_id, species_key):
     return CalculateResponse(
         compound_id=compound_id,
+        model=ivive_input.model,
+        model_label=ivive_input.model_label,
         species=ivive_input.species,
         species_key=species_key,
         system=ivive_input.system,
@@ -109,6 +122,7 @@ def calculate(req: CalculateRequest) -> CalculateResponse:
             fu_inc=req.fu_inc,
             fu_p=req.fu_p,
             rbp=req.rbp,
+            model=req.model,
             liver_blood_flow_L_per_h=req.liver_blood_flow_L_per_h,
             liver_weight_g=req.liver_weight_g,
             hpgl=req.hpgl,
@@ -138,7 +152,10 @@ def get_template() -> Response:
 
 
 @app.post("/api/batch", response_model=BatchResponse)
-async def run_batch(file: UploadFile = File(...)) -> BatchResponse:
+async def run_batch(
+    file: UploadFile = File(...),
+    model: str = Form(default=""),
+) -> BatchResponse:
     """Parse an uploaded .xlsx or .csv batch file and run IVIVE on each row."""
     try:
         content = await file.read()
@@ -148,7 +165,7 @@ async def run_batch(file: UploadFile = File(...)) -> BatchResponse:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=f"Failed to parse file: {exc}") from exc
 
-    results = batch_mod.process_rows(rows)
+    results = batch_mod.process_rows(rows, model_override=model)
     success = sum(1 for r in results if r["status"] == "ok")
     return BatchResponse(
         total_rows=len(results),
