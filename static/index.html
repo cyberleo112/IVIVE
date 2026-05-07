@@ -62,7 +62,16 @@
         <div class="bg-white rounded-xl shadow p-6">
           <h2 class="text-lg font-semibold mb-4">Inputs</h2>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Model</span>
+              <select id="single-model"
+                      class="mt-1 w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2">
+                <option value="gastroplus">GastroPlus</option>
+                <option value="simcyp">Simcyp</option>
+                <option value="both">Both</option>
+              </select>
+            </label>
             <label class="block">
               <span class="text-sm font-medium text-slate-700">Species</span>
               <select id="single-species"
@@ -182,25 +191,19 @@
                 </span>
               </div>
             </div>
-            <div class="pt-3 border-t border-slate-200 text-xs text-slate-600">
-              <div><strong>Species:</strong> <span id="r-species"></span> &middot;
-                   <strong>System:</strong> <span id="r-system"></span></div>
-              <div class="mt-1">Q<sub>h</sub>=<span id="r-qh"></span> L/h &middot;
-                   Liver=<span id="r-lw"></span> g &middot;
-                   HPGL=<span id="r-hpgl"></span> &middot;
-                   MPPGL=<span id="r-mppgl"></span></div>
-            </div>
+            <div class="pt-3 border-t border-slate-200 text-xs text-slate-600"></div>
           </div>
         </div>
       </div>
 
       <!-- Reference table -->
       <div class="bg-white rounded-xl shadow p-6 mt-6">
-        <h3 class="text-sm font-semibold mb-3">Default species scaling factors</h3>
+        <h3 id="defaults-title" class="text-sm font-semibold mb-3">Default species scaling factors</h3>
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm num">
             <thead class="bg-slate-100 text-slate-600">
               <tr>
+                <th class="text-left p-2">Model</th>
                 <th class="text-left p-2">Species</th>
                 <th class="text-right p-2">Q<sub>h</sub> (L/h)</th>
                 <th class="text-right p-2">Liver (g)</th>
@@ -225,7 +228,19 @@
         </p>
 
         <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm text-slate-700">
+            <span class="font-medium">Model</span>
+            <select id="batch-model"
+                    class="ml-2 rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2">
+              <option value="">Use file column</option>
+              <option value="gastroplus">GastroPlus</option>
+              <option value="simcyp">Simcyp</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
           <a id="dl-template"
+             href="/api/template"
+             download="ivive_template.xlsx"
              class="px-4 py-2 bg-slate-700 text-white rounded-md text-sm font-medium hover:bg-slate-800 cursor-pointer">
             Download template (.xlsx)
           </a>
@@ -260,6 +275,7 @@
                 <tr>
                   <th class="text-left p-2">#</th>
                   <th class="text-left p-2">Compound</th>
+                  <th class="text-left p-2">Model</th>
                   <th class="text-left p-2">Species</th>
                   <th class="text-left p-2">System</th>
                   <th class="text-right p-2">CL<sub>p</sub> (L/h)</th>
@@ -307,7 +323,7 @@
                 <th class="text-right p-2">% diff</th>
                 <th class="text-right p-2">Expected E<sub>h</sub> (%)</th>
                 <th class="text-right p-2">Predicted E<sub>h</sub> (%)</th>
-                <th class="text-right p-2">Δ pp</th>
+                <th class="text-right p-2">Î” pp</th>
                 <th class="text-left p-2">Result</th>
               </tr>
             </thead>
@@ -322,7 +338,7 @@
     </footer>
   </main>
 
-  <script type="module" src="./firebase-init.js"></script>
-  <script src="./app.js"></script>
+  <script type="module" src="/static/firebase-init.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>
