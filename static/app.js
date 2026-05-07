@@ -12,8 +12,16 @@ const API = {
 
 const state = {
   species: [],
+  defaults: [],
+  defaultsByModel: {},
   speciesByKey: {},
   batchResults: null,
+};
+
+const MODEL_LABELS = {
+  gastroplus: "GastroPlus",
+  simcyp: "Simcyp",
+  both: "Both",
 };
 
 // ---------- Helpers ----------
@@ -62,22 +70,51 @@ function setupTabs() {
 // ---------- Species ----------
 
 async function loadSpecies() {
-  const list = await jsonOrError(await fetch(API.species));
-  state.species = list;
-  state.speciesByKey = Object.fromEntries(list.map((s) => [s.key, s]));
+  const list = await jsonOrError(await fetch(`${API.species}?model=both`));
+  state.defaults = list;
+  state.defaultsByModel = list.reduce((acc, s) => {
+    acc[s.model] = acc[s.model] || {};
+    acc[s.model][s.key] = s;
+    return acc;
+  }, {});
+  state.species = list.filter((s) => s.model === "gastroplus");
+  state.speciesByKey = Object.fromEntries(state.species.map((s) => [s.key, s]));
 
   const sel = $("single-species");
   sel.innerHTML = "";
-  list.forEach((s) => {
+  state.species.forEach((s) => {
     const opt = document.createElement("option");
     opt.value = s.key;
     opt.textContent = s.label;
     sel.appendChild(opt);
   });
 
+  renderDefaultsTable();
+  populateAdvancedFromSelection();
+}
+
+function selectedModel() {
+  return $("single-model") ? $("single-model").value : "gastroplus";
+}
+
+function selectedSpeciesDefaults(modelKey) {
+  const key = $("single-species").value;
+  return state.defaultsByModel[modelKey]?.[key] || null;
+}
+
+function renderDefaultsTable() {
+  const model = selectedModel();
+  const rows = model === "both"
+    ? state.defaults
+    : state.defaults.filter((s) => s.model === model);
+  $("defaults-title").textContent = model === "both"
+    ? "Default species scaling factors: GastroPlus and Simcyp"
+    : `Default species scaling factors: ${MODEL_LABELS[model]}`;
+
   const tbody = $("species-table");
-  tbody.innerHTML = list.map((s) => `
+  tbody.innerHTML = rows.map((s) => `
     <tr class="border-t border-slate-200">
+      <td class="p-2 text-left">${s.model_label}</td>
       <td class="p-2 text-left">${s.label}</td>
       <td class="p-2 text-right">${fmtNum(s.liver_blood_flow_L_per_h)}</td>
       <td class="p-2 text-right">${fmtNum(s.liver_weight_g)}</td>
@@ -85,18 +122,27 @@ async function loadSpecies() {
       <td class="p-2 text-right">${fmtNum(s.microsomal_protein_mg_per_g_liver)}</td>
     </tr>
   `).join("");
-
-  populateAdvancedFromSpecies();
 }
 
-function populateAdvancedFromSpecies() {
-  const key = $("single-species").value;
-  const s = state.speciesByKey[key];
+function populateAdvancedFromSelection() {
+  const model = selectedModel();
+  if (model === "both") {
+    ["adv-qh", "adv-liver", "adv-hpgl", "adv-mppgl"].forEach((id) => {
+      const el = $(id);
+      el.value = "";
+      el.placeholder = "Each model default";
+    });
+    return;
+  }
+  const s = selectedSpeciesDefaults(model);
   if (!s) return;
   $("adv-qh").value    = s.liver_blood_flow_L_per_h;
   $("adv-liver").value = s.liver_weight_g;
   $("adv-hpgl").value  = s.hepatocytes_million_per_g_liver;
   $("adv-mppgl").value = s.microsomal_protein_mg_per_g_liver;
+  ["adv-qh", "adv-liver", "adv-hpgl", "adv-mppgl"].forEach((id) => {
+    $(id).placeholder = "";
+  });
 }
 
 // ---------- Single ----------
@@ -115,8 +161,26 @@ function readAdvOverride(id, defaultVal) {
   const n = parseFloat(v);
   if (Number.isNaN(n)) return null;
   // Only send as override if the value differs meaningfully from default.
-  if (Math.abs(n - defaultVal) < 1e-12) return null;
+  if (defaultVal !== null && defaultVal !== undefined && Math.abs(n - defaultVal) < 1e-12) return null;
   return n;
+}
+
+function buildCalculationPayload(modelKey) {
+  const speciesKey = $("single-species").value;
+  const sp = selectedSpeciesDefaults(modelKey);
+  return {
+    model: modelKey,
+    species: speciesKey,
+    system: $("single-system").value,
+    clint_in_vitro: parseFloat($("single-clint").value),
+    fu_inc: parseFloat($("single-fuinc").value),
+    fu_p: parseFloat($("single-fup").value),
+    rbp: parseFloat($("single-rbp").value),
+    liver_blood_flow_L_per_h: readAdvOverride("adv-qh",    sp?.liver_blood_flow_L_per_h),
+    liver_weight_g:           readAdvOverride("adv-liver", sp?.liver_weight_g),
+    hpgl:                     readAdvOverride("adv-hpgl",  sp?.hepatocytes_million_per_g_liver),
+    mppgl:                    readAdvOverride("adv-mppgl", sp?.microsomal_protein_mg_per_g_liver),
+  };
 }
 
 async function runSingleCalculation() {
@@ -125,41 +189,20 @@ async function runSingleCalculation() {
   setHidden($("single-result"), true);
   setHidden($("single-empty"), true);
 
-  const speciesKey = $("single-species").value;
-  const sp = state.speciesByKey[speciesKey];
-  const payload = {
-    species: speciesKey,
-    system: $("single-system").value,
-    clint_in_vitro: parseFloat($("single-clint").value),
-    fu_inc: parseFloat($("single-fuinc").value),
-    fu_p: parseFloat($("single-fup").value),
-    rbp: parseFloat($("single-rbp").value),
-    liver_blood_flow_L_per_h: readAdvOverride("adv-qh",    sp.liver_blood_flow_L_per_h),
-    liver_weight_g:           readAdvOverride("adv-liver", sp.liver_weight_g),
-    hpgl:                     readAdvOverride("adv-hpgl",  sp.hepatocytes_million_per_g_liver),
-    mppgl:                    readAdvOverride("adv-mppgl", sp.microsomal_protein_mg_per_g_liver),
-  };
+  const chosen = selectedModel();
+  const modelKeys = chosen === "both" ? ["gastroplus", "simcyp"] : [chosen];
 
   try {
-    const resp = await fetch(API.calculate, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await jsonOrError(resp);
+    const results = await Promise.all(modelKeys.map(async (modelKey) => {
+      const resp = await fetch(API.calculate, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildCalculationPayload(modelKey)),
+      });
+      return await jsonOrError(resp);
+    }));
 
-    $("r-clp-lh").textContent    = fmtNum(data.hepatic_plasma_clearance_L_per_h, 4);
-    $("r-clp-mlmin").textContent = fmtNum(data.hepatic_plasma_clearance_mL_per_min, 4);
-    $("r-eh").textContent        = fmtNum(data.extraction_ratio_percent, 4);
-    setClassBadge($("r-class"), data.clearance_classification);
-    $("r-species").textContent   = data.species;
-    $("r-system").textContent    = data.system;
-    const u = data.inputs_used;
-    $("r-qh").textContent    = fmtNum(u.liver_blood_flow_L_per_h);
-    $("r-lw").textContent    = fmtNum(u.liver_weight_g);
-    $("r-hpgl").textContent  = fmtNum(u.hpgl);
-    $("r-mppgl").textContent = fmtNum(u.mppgl);
-
+    renderSingleResults(results);
     setHidden($("single-result"), false);
   } catch (err) {
     errEl.textContent = err.message;
@@ -174,25 +217,69 @@ function clearSingle() {
   setHidden($("single-empty"), false);
 }
 
+function singleResultHtml(data) {
+  const u = data.inputs_used;
+  return `
+    <div class="rounded-lg border border-slate-200 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h3 class="text-base font-semibold text-slate-900">${escapeHtml(data.model_label)}</h3>
+        <span class="text-xs text-slate-500">${escapeHtml(data.species)} &middot; ${escapeHtml(data.system)}</span>
+      </div>
+      <div>
+        <div class="text-xs uppercase tracking-wide text-slate-500">Hepatic plasma clearance (CL<sub>p</sub>)</div>
+        <div class="flex items-baseline gap-3">
+          <span class="num text-3xl font-bold text-blue-700">${fmtNum(data.hepatic_plasma_clearance_L_per_h, 4)}</span>
+          <span class="text-sm text-slate-500">L/h</span>
+          <span class="num text-base text-slate-700 ml-2">${fmtNum(data.hepatic_plasma_clearance_mL_per_min, 4)}</span>
+          <span class="text-sm text-slate-500">mL/min</span>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="text-xs uppercase tracking-wide text-slate-500">Hepatic extraction ratio (E<sub>h</sub>)</div>
+        <div class="flex items-baseline gap-2">
+          <span class="num text-3xl font-bold text-indigo-700">${fmtNum(data.extraction_ratio_percent, 4)}</span>
+          <span class="text-sm text-slate-500">%</span>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="text-xs uppercase tracking-wide text-slate-500">Clearance classification</div>
+        <div class="flex items-center gap-2 mt-1">
+          ${classificationBadgeHtml(data.clearance_classification)}
+          <span class="text-xs text-slate-500">Low &lt; 30% &middot; Moderate 30&ndash;70% &middot; High &gt; 70%</span>
+        </div>
+      </div>
+      <div class="pt-3 mt-4 border-t border-slate-200 text-xs text-slate-600">
+        Q<sub>h</sub>=${fmtNum(u.liver_blood_flow_L_per_h)} L/h &middot;
+        Liver=${fmtNum(u.liver_weight_g)} g &middot;
+        HPGL=${fmtNum(u.hpgl)} &middot;
+        MPPGL=${fmtNum(u.mppgl)}
+      </div>
+    </div>
+  `;
+}
+
+function renderSingleResults(results) {
+  $("single-result").innerHTML = results.map(singleResultHtml).join("");
+}
+
 function setupSingle() {
+  $("single-model").addEventListener("change", () => {
+    populateAdvancedFromSelection();
+    renderDefaultsTable();
+  });
   $("single-species").addEventListener("change", () => {
-    populateAdvancedFromSpecies();
+    populateAdvancedFromSelection();
   });
   $("single-system").addEventListener("change", updateClintUnitLabel);
   $("single-calc").addEventListener("click", runSingleCalculation);
   $("single-clear").addEventListener("click", clearSingle);
-  $("adv-reset").addEventListener("click", populateAdvancedFromSpecies);
+  $("adv-reset").addEventListener("click", populateAdvancedFromSelection);
   updateClintUnitLabel();
 }
 
 // ---------- Batch ----------
 
 function setupBatch() {
-  $("dl-template").addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.href = API.template;
-  });
-
   $("batch-file").addEventListener("change", (e) => {
     const f = e.target.files[0];
     $("upload-label").textContent = f ? f.name : "Choose file";
@@ -214,6 +301,7 @@ async function runBatch() {
 
   const fd = new FormData();
   fd.append("file", f);
+  if ($("batch-model").value) fd.append("model", $("batch-model").value);
 
   try {
     const resp = await fetch(API.batch, { method: "POST", body: fd });
@@ -233,6 +321,7 @@ async function runBatch() {
         <tr class="border-t border-slate-200">
           <td class="p-2 text-left">${r.row}</td>
           <td class="p-2 text-left">${escapeHtml(r.compound_id || "")}</td>
+          <td class="p-2 text-left">${escapeHtml(r.model_label || r.model || res.model_label || "")}</td>
           <td class="p-2 text-left">${escapeHtml(r.species || "")}</td>
           <td class="p-2 text-left">${escapeHtml(r.system || "")}</td>
           <td class="p-2 text-right">${fmtNum(res.hepatic_plasma_clearance_L_per_h, 4)}</td>
