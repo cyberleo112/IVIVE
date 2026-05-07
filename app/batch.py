@@ -16,16 +16,19 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from app.core import (
-    SPECIES_DEFAULTS,
+    MODEL_DEFAULTS,
+    MODEL_DISPLAY,
     SPECIES_DISPLAY,
     calculate_hepatic_clearance,
     make_input_from_species,
+    normalize_model,
     normalize_species,
 )
 
 
 INPUT_COLUMNS: List[Tuple[str, str]] = [
     ("compound_id", "Free-text label for the compound (optional)."),
+    ("model", "Pick from dropdown: GastroPlus | Simcyp | Both. Blank uses GastroPlus."),
     ("species", "Pick from dropdown: human | mouse | rat | dog | monkey."),
     ("system", "Pick from dropdown: hepatocyte | microsome."),
     ("clint_in_vitro", "In vitro CLint. Units: uL/min/million cells (hepatocyte) OR uL/min/mg microsomal protein (microsome). Must be > 0."),
@@ -41,6 +44,7 @@ INPUT_COLUMNS: List[Tuple[str, str]] = [
 # Pretty header text shown in the Inputs sheet (units / range hints).
 HEADER_DISPLAY: Dict[str, str] = {
     "compound_id": "compound_id",
+    "model": "model (dropdown)",
     "species": "species (dropdown)",
     "system": "system (dropdown)",
     "clint_in_vitro": "clint_in_vitro (uL/min/million cells [hep] or uL/min/mg [mic])",
@@ -54,6 +58,7 @@ HEADER_DISPLAY: Dict[str, str] = {
 }
 
 # Allowed values for the species/system dropdowns in the template.
+MODEL_DROPDOWN_VALUES: List[str] = ["GastroPlus", "Simcyp", "Both"]
 SPECIES_DROPDOWN_VALUES: List[str] = ["human", "mouse", "rat", "dog", "monkey"]
 SYSTEM_DROPDOWN_VALUES: List[str] = ["hepatocyte", "microsome"]
 
@@ -69,6 +74,7 @@ OUTPUT_COLUMNS: List[str] = [
 EXAMPLE_ROWS: List[Dict[str, Any]] = [
     {
         "compound_id": "Compound 1",
+        "model": "GastroPlus",
         "species": "human",
         "system": "hepatocyte",
         "clint_in_vitro": 6.4,
@@ -78,6 +84,7 @@ EXAMPLE_ROWS: List[Dict[str, Any]] = [
     },
     {
         "compound_id": "Compound 2",
+        "model": "Simcyp",
         "species": "human",
         "system": "microsome",
         "clint_in_vitro": 19.0,
@@ -123,12 +130,29 @@ def build_template_workbook() -> bytes:
     ws.freeze_panes = "A2"
 
     species_col_idx = column_keys.index("species") + 1
+    model_col_idx = column_keys.index("model") + 1
     system_col_idx = column_keys.index("system") + 1
     species_letter = get_column_letter(species_col_idx)
+    model_letter = get_column_letter(model_col_idx)
     system_letter = get_column_letter(system_col_idx)
 
+    model_values = ",".join(MODEL_DROPDOWN_VALUES)
     species_values = ",".join(SPECIES_DROPDOWN_VALUES)
     system_values = ",".join(SYSTEM_DROPDOWN_VALUES)
+
+    model_dv = DataValidation(
+        type="list",
+        formula1=f'"{model_values}"',
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="Invalid model",
+        error="Pick one of: " + ", ".join(MODEL_DROPDOWN_VALUES),
+        promptTitle="Model",
+        prompt="Choose: " + ", ".join(MODEL_DROPDOWN_VALUES),
+    )
+    model_dv.showInputMessage = True
+    model_dv.add(f"{model_letter}2:{model_letter}1048576")
+    ws.add_data_validation(model_dv)
 
     species_dv = DataValidation(
         type="list",
@@ -223,28 +247,32 @@ def build_template_workbook() -> bytes:
     next_row = 4 + len(INPUT_COLUMNS) + 2
     instr.cell(row=next_row, column=1, value="Species defaults used when not overridden:").font = Font(bold=True)
     next_row += 1
-    instr.cell(row=next_row, column=1, value="species").font = Font(bold=True)
-    instr.cell(row=next_row, column=2, value="Qh (L/h)").font = Font(bold=True)
-    instr.cell(row=next_row, column=3, value="Liver weight (g)").font = Font(bold=True)
-    instr.cell(row=next_row, column=4, value="HPGL (M/g)").font = Font(bold=True)
-    instr.cell(row=next_row, column=5, value="MPPGL (mg/g)").font = Font(bold=True)
-    for sf in SPECIES_DEFAULTS.values():
-        next_row += 1
-        instr.cell(row=next_row, column=1, value=sf.species)
-        instr.cell(row=next_row, column=2, value=sf.liver_blood_flow_L_per_h)
-        instr.cell(row=next_row, column=3, value=sf.liver_weight_g)
-        instr.cell(row=next_row, column=4, value=sf.hepatocytes_million_per_g_liver)
-        instr.cell(row=next_row, column=5, value=sf.microsomal_protein_mg_per_g_liver)
+    instr.cell(row=next_row, column=1, value="model").font = Font(bold=True)
+    instr.cell(row=next_row, column=2, value="species").font = Font(bold=True)
+    instr.cell(row=next_row, column=3, value="Qh (L/h)").font = Font(bold=True)
+    instr.cell(row=next_row, column=4, value="Liver weight (g)").font = Font(bold=True)
+    instr.cell(row=next_row, column=5, value="HPGL (M/g)").font = Font(bold=True)
+    instr.cell(row=next_row, column=6, value="MPPGL (mg/g)").font = Font(bold=True)
+    for model_key, defaults in MODEL_DEFAULTS.items():
+        for sf in defaults.values():
+            next_row += 1
+            instr.cell(row=next_row, column=1, value=MODEL_DISPLAY[model_key])
+            instr.cell(row=next_row, column=2, value=sf.species)
+            instr.cell(row=next_row, column=3, value=sf.liver_blood_flow_L_per_h)
+            instr.cell(row=next_row, column=4, value=sf.liver_weight_g)
+            instr.cell(row=next_row, column=5, value=sf.hepatocytes_million_per_g_liver)
+            instr.cell(row=next_row, column=6, value=sf.microsomal_protein_mg_per_g_liver)
 
     next_row += 2
     instr.cell(row=next_row, column=1, value=(
         "Notes: 'monkey', 'cynomolgus', and 'cyno' all map to Cyno. "
         "'hep' is accepted for hepatocyte; 'mlm', 'rlm', 'hmm' are accepted for microsome. "
-        "Leave any optional override blank to use the species default."
+        "Leave model blank to use GastroPlus. Use 'Both' to run the row once with GastroPlus "
+        "and once with Simcyp. Leave any optional override blank to use the model/species default."
     )).alignment = Alignment(wrap_text=True)
     instr.column_dimensions["A"].width = 28
     instr.column_dimensions["B"].width = 60
-    for c in ("C", "D", "E"):
+    for c in ("C", "D", "E", "F"):
         instr.column_dimensions[c].width = 18
 
     buf = io.BytesIO()
@@ -345,67 +373,79 @@ def parse_uploaded_file(filename: str, content: bytes) -> List[Dict[str, Any]]:
     return rows
 
 
-def process_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def process_rows(rows: List[Dict[str, Any]], model_override: Optional[str] = None) -> List[Dict[str, Any]]:
     """Run IVIVE on each parsed row; return per-row results with status."""
     results: List[Dict[str, Any]] = []
+    override = _coerce_str(model_override)
     for i, row in enumerate(rows, start=1):
         compound_id = _coerce_str(row.get("compound_id"))
+        model_raw = override or _coerce_str(row.get("model")) or "GastroPlus"
         species_raw = _coerce_str(row.get("species"))
         system_raw = _coerce_str(row.get("system"))
         try:
             if not species_raw or not system_raw:
                 raise ValueError("species and system are required.")
-            ivive_input = make_input_from_species(
-                species=species_raw,
-                system=system_raw,
-                clint=_coerce_float(row.get("clint_in_vitro")) or 0.0,
-                fu_inc=_coerce_float(row.get("fu_inc")) or 0.0,
-                fu_p=_coerce_float(row.get("fu_p")) or 0.0,
-                rbp=_coerce_float(row.get("rbp")) or 0.0,
-                liver_blood_flow_L_per_h=_coerce_float(row.get("liver_blood_flow_L_per_h")),
-                liver_weight_g=_coerce_float(row.get("liver_weight_g")),
-                hpgl=_coerce_float(row.get("hpgl")),
-                mppgl=_coerce_float(row.get("mppgl")),
-            )
-            result = calculate_hepatic_clearance(ivive_input)
-            results.append({
-                "row": i,
-                "compound_id": compound_id,
-                "species": ivive_input.species,
-                "system": ivive_input.system,
-                "status": "ok",
-                "error_message": None,
-                "result": {
+            model_key = normalize_model(model_raw, allow_both=True)
+            model_keys = list(MODEL_DEFAULTS.keys()) if model_key == "both" else [model_key]
+            for source_key in model_keys:
+                ivive_input = make_input_from_species(
+                    species=species_raw,
+                    system=system_raw,
+                    clint=_coerce_float(row.get("clint_in_vitro")) or 0.0,
+                    fu_inc=_coerce_float(row.get("fu_inc")) or 0.0,
+                    fu_p=_coerce_float(row.get("fu_p")) or 0.0,
+                    rbp=_coerce_float(row.get("rbp")) or 0.0,
+                    model=source_key,
+                    liver_blood_flow_L_per_h=_coerce_float(row.get("liver_blood_flow_L_per_h")),
+                    liver_weight_g=_coerce_float(row.get("liver_weight_g")),
+                    hpgl=_coerce_float(row.get("hpgl")),
+                    mppgl=_coerce_float(row.get("mppgl")),
+                )
+                result = calculate_hepatic_clearance(ivive_input)
+                results.append({
+                    "row": i,
                     "compound_id": compound_id,
+                    "model": ivive_input.model,
+                    "model_label": ivive_input.model_label,
                     "species": ivive_input.species,
-                    "species_key": normalize_species(species_raw),
                     "system": ivive_input.system,
-                    "inputs_used": {
-                        "clint_in_vitro": ivive_input.clint_in_vitro,
-                        "fu_inc": ivive_input.fu_inc,
-                        "fu_p": ivive_input.fu_p,
-                        "rbp": ivive_input.blood_to_plasma_ratio,
-                        "liver_blood_flow_L_per_h": ivive_input.liver_blood_flow_L_per_h,
-                        "liver_weight_g": ivive_input.liver_weight_g,
-                        "hpgl": ivive_input.hepatocytes_million_per_g_liver,
-                        "mppgl": ivive_input.microsomal_protein_mg_per_g_liver,
+                    "status": "ok",
+                    "error_message": None,
+                    "result": {
+                        "compound_id": compound_id,
+                        "model": ivive_input.model,
+                        "model_label": ivive_input.model_label,
+                        "species": ivive_input.species,
+                        "species_key": normalize_species(species_raw),
+                        "system": ivive_input.system,
+                        "inputs_used": {
+                            "clint_in_vitro": ivive_input.clint_in_vitro,
+                            "fu_inc": ivive_input.fu_inc,
+                            "fu_p": ivive_input.fu_p,
+                            "rbp": ivive_input.blood_to_plasma_ratio,
+                            "liver_blood_flow_L_per_h": ivive_input.liver_blood_flow_L_per_h,
+                            "liver_weight_g": ivive_input.liver_weight_g,
+                            "hpgl": ivive_input.hepatocytes_million_per_g_liver,
+                            "mppgl": ivive_input.microsomal_protein_mg_per_g_liver,
+                        },
+                        "clint_u_in_vitro": result.clint_u_in_vitro,
+                        "total_scaling_amount": result.total_scaling_amount,
+                        "scaling_unit": result.scaling_unit,
+                        "clint_u_liver_L_per_h": result.clint_u_liver_L_per_h,
+                        "plasma_liver_flow_L_per_h": result.plasma_liver_flow_L_per_h,
+                        "hepatic_plasma_clearance_L_per_h": result.hepatic_plasma_clearance_L_per_h,
+                        "hepatic_plasma_clearance_mL_per_min": result.hepatic_plasma_clearance_mL_per_min,
+                        "extraction_ratio_plasma": result.extraction_ratio_plasma,
+                        "extraction_ratio_percent": result.extraction_ratio_plasma * 100.0,
+                        "clearance_classification": result.clearance_classification,
                     },
-                    "clint_u_in_vitro": result.clint_u_in_vitro,
-                    "total_scaling_amount": result.total_scaling_amount,
-                    "scaling_unit": result.scaling_unit,
-                    "clint_u_liver_L_per_h": result.clint_u_liver_L_per_h,
-                    "plasma_liver_flow_L_per_h": result.plasma_liver_flow_L_per_h,
-                    "hepatic_plasma_clearance_L_per_h": result.hepatic_plasma_clearance_L_per_h,
-                    "hepatic_plasma_clearance_mL_per_min": result.hepatic_plasma_clearance_mL_per_min,
-                    "extraction_ratio_plasma": result.extraction_ratio_plasma,
-                    "extraction_ratio_percent": result.extraction_ratio_plasma * 100.0,
-                    "clearance_classification": result.clearance_classification,
-                },
-            })
+                })
         except Exception as exc:  # noqa: BLE001
             results.append({
                 "row": i,
                 "compound_id": compound_id,
+                "model": model_raw,
+                "model_label": model_raw,
                 "species": species_raw,
                 "system": system_raw,
                 "status": "error",
@@ -421,6 +461,7 @@ def _row_for_export(row: Dict[str, Any]) -> List[Any]:
     inp = (res.get("inputs_used") or {}) if isinstance(res, dict) else {}
     return [
         row.get("compound_id"),
+        row.get("model_label") or row.get("model"),
         row.get("species"),
         row.get("system"),
         inp.get("clint_in_vitro"),
@@ -479,6 +520,7 @@ __all__ = [
     "INPUT_COLUMNS",
     "OUTPUT_COLUMNS",
     "HEADER_DISPLAY",
+    "MODEL_DROPDOWN_VALUES",
     "SPECIES_DROPDOWN_VALUES",
     "SYSTEM_DROPDOWN_VALUES",
     "build_template_workbook",
