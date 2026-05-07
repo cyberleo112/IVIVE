@@ -1,4 +1,4 @@
-"""Core IVIVE math and species defaults.
+"""Core IVIVE math and species/model defaults.
 
 Single source of truth for hepatic plasma clearance prediction from in vitro
 intrinsic clearance, supporting hepatocyte and microsome systems for human,
@@ -25,6 +25,8 @@ class SpeciesScalingFactor:
 
 @dataclass
 class IVIVEInput:
+    model: str
+    model_label: str
     species: str
     system: str
     clint_in_vitro: float
@@ -83,6 +85,33 @@ SPECIES_DEFAULTS: Dict[str, SpeciesScalingFactor] = {
     "cyno": SpeciesScalingFactor("Cyno", 4, "Cyno / adult default", 8.72, 100, 120, 38),
 }
 
+SIMCYP_SPECIES_DEFAULTS: Dict[str, SpeciesScalingFactor] = {
+    "human": SpeciesScalingFactor("Human", 70, "Simcyp adult default", 91.8, 1782.648, 117.52, 39.791),
+    "mouse": SpeciesScalingFactor("Mouse", 0.02, "Simcyp default", 0.189216, 1.2852, 135, 48),
+    "rat": SpeciesScalingFactor("Rat", 0.25, "Simcyp default", 1.1616, 8.9985, 108, 46),
+    "dog": SpeciesScalingFactor("Dog", 10, "Simcyp default", 31.10382, 300, 170, 40.41),
+    "cyno": SpeciesScalingFactor("Cyno", 5, "Simcyp monkey default", 8.62872, 78.80004, 123, 31),
+}
+
+MODEL_DEFAULTS: Dict[str, Dict[str, SpeciesScalingFactor]] = {
+    "gastroplus": SPECIES_DEFAULTS,
+    "simcyp": SIMCYP_SPECIES_DEFAULTS,
+}
+
+MODEL_DISPLAY: Dict[str, str] = {
+    "gastroplus": "GastroPlus",
+    "simcyp": "Simcyp",
+}
+
+MODEL_ALIASES: Dict[str, str] = {
+    "gastroplus": "gastroplus",
+    "gastro plus": "gastroplus",
+    "gp": "gastroplus",
+    "simcyp": "simcyp",
+    "both": "both",
+    "all": "both",
+}
+
 SPECIES_ALIASES: Dict[str, str] = {
     "human": "human", "man": "human",
     "mouse": "mouse", "mice": "mouse",
@@ -115,8 +144,21 @@ def normalize_species(species: str) -> str:
     return SPECIES_ALIASES[key]
 
 
-def get_species_defaults(species: str) -> SpeciesScalingFactor:
-    return SPECIES_DEFAULTS[normalize_species(species)]
+def normalize_model(model: Optional[str] = None, *, allow_both: bool = False) -> str:
+    """Normalize a model/source string to 'gastroplus', 'simcyp', or 'both'."""
+    key = (model or "gastroplus").strip().lower()
+    if key not in MODEL_ALIASES:
+        valid = ", ".join(MODEL_DISPLAY.values())
+        raise ValueError(f"Unknown model '{model}'. Valid options: {valid}.")
+    normalized = MODEL_ALIASES[key]
+    if normalized == "both" and not allow_both:
+        raise ValueError("Use either 'GastroPlus' or 'Simcyp' for one calculation.")
+    return normalized
+
+
+def get_species_defaults(species: str, model: Optional[str] = None) -> SpeciesScalingFactor:
+    model_key = normalize_model(model)
+    return MODEL_DEFAULTS[model_key][normalize_species(species)]
 
 
 def normalize_system(system: str) -> str:
@@ -200,15 +242,19 @@ def make_input_from_species(
     fu_inc: float,
     fu_p: float,
     rbp: float,
+    model: Optional[str] = None,
     liver_blood_flow_L_per_h: Optional[float] = None,
     liver_weight_g: Optional[float] = None,
     hpgl: Optional[float] = None,
     mppgl: Optional[float] = None,
 ) -> IVIVEInput:
     """Build an IVIVEInput, filling species defaults for any unspecified fields."""
-    defaults = get_species_defaults(species)
+    model_key = normalize_model(model)
+    defaults = get_species_defaults(species, model_key)
     normalized_system = normalize_system(system)
     return IVIVEInput(
+        model=model_key,
+        model_label=MODEL_DISPLAY[model_key],
         species=defaults.species,
         system=normalized_system,
         clint_in_vitro=clint,
