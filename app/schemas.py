@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class CalculateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
+    model: str = Field(default="gastroplus", description="GastroPlus or Simcyp.")
     species: str = Field(..., description="One of human, mouse, rat, dog, cyno/monkey.")
     system: str = Field(..., description="hepatocyte or microsome.")
     clint_in_vitro: float = Field(..., ge=0, description="uL/min/million cells (hep) or uL/min/mg (mic).")
@@ -34,6 +35,8 @@ class CalculateRequest(BaseModel):
 
 class CalculateResponse(BaseModel):
     compound_id: Optional[str] = None
+    model: str
+    model_label: str
     species: str
     species_key: str
     system: str
@@ -51,6 +54,8 @@ class CalculateResponse(BaseModel):
 
 
 class SpeciesDefaultsResponse(BaseModel):
+    model: str
+    model_label: str
     key: str
     label: str
     weight_kg: float
@@ -64,6 +69,8 @@ class SpeciesDefaultsResponse(BaseModel):
 class BatchRowResult(BaseModel):
     row: int
     compound_id: Optional[str] = None
+    model: Optional[str] = None
+    model_label: Optional[str] = None
     species: Optional[str] = None
     system: Optional[str] = None
     status: Literal["ok", "error"]
