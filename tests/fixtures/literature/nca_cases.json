@@ -1,0 +1,161 @@
+[
+  {
+    "case_id": "theoph_subject_1",
+    "compound": "theophylline",
+    "source": "Boeckmann AJ, Sheiner LB, Beal SL. NONMEM Users Guide: Part V, 1994; Theoph dataset as distributed with R datasets/nlme.",
+    "source_url": "https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/Theoph.html",
+    "notes": "Classic oral theophylline serum concentration-time benchmark. Outputs are benchmark NCA values calculated from the tabular source data using linear-up/log-down AUC and manual terminal points listed here.",
+    "profile": {
+      "compound_id": "theophylline",
+      "study_id": "Theoph",
+      "subject_id": "1",
+      "species": "human",
+      "matrix": "serum",
+      "route": "extravascular",
+      "dose": 319.992,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [7.03, 9.05, 12.12, 24.37],
+      "observations": [
+        {"time": 0, "concentration": 0.74},
+        {"time": 0.25, "concentration": 2.84},
+        {"time": 0.57, "concentration": 6.57},
+        {"time": 1.12, "concentration": 10.5},
+        {"time": 2.02, "concentration": 9.66},
+        {"time": 3.82, "concentration": 8.58},
+        {"time": 5.1, "concentration": 8.36},
+        {"time": 7.03, "concentration": 7.47},
+        {"time": 9.05, "concentration": 6.89},
+        {"time": 12.12, "concentration": 5.94},
+        {"time": 24.37, "concentration": 3.28}
+      ]
+    },
+    "reported_outputs": {
+      "cmax": 10.5,
+      "tmax": 1.12,
+      "auclast": 147.234748537,
+      "aucinf_obs": 215.745692029,
+      "lambda_z": 0.047875563,
+      "half_life": 14.478099792
+    },
+    "tolerances": {
+      "relative": {
+        "cmax": 0.10,
+        "auclast": 0.10,
+        "aucinf_obs": 0.10,
+        "lambda_z": 0.15,
+        "half_life": 0.15
+      },
+      "absolute": {
+        "tmax": 0.01
+      }
+    }
+  },
+  {
+    "case_id": "theoph_subject_2",
+    "compound": "theophylline",
+    "source": "Boeckmann AJ, Sheiner LB, Beal SL. NONMEM Users Guide: Part V, 1994; Theoph dataset as distributed with R datasets/nlme.",
+    "source_url": "https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/Theoph.html",
+    "notes": "Classic oral theophylline serum concentration-time benchmark. Outputs are benchmark NCA values calculated from the tabular source data using linear-up/log-down AUC and manual terminal points listed here.",
+    "profile": {
+      "compound_id": "theophylline",
+      "study_id": "Theoph",
+      "subject_id": "2",
+      "species": "human",
+      "matrix": "serum",
+      "route": "extravascular",
+      "dose": 318.56,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [7.03, 9, 12, 24.3],
+      "observations": [
+        {"time": 0, "concentration": 0},
+        {"time": 0.27, "concentration": 1.72},
+        {"time": 0.52, "concentration": 7.91},
+        {"time": 1, "concentration": 8.31},
+        {"time": 1.92, "concentration": 8.33},
+        {"time": 3.5, "concentration": 6.85},
+        {"time": 5.02, "concentration": 6.08},
+        {"time": 7.03, "concentration": 5.4},
+        {"time": 9, "concentration": 4.55},
+        {"time": 12, "concentration": 3.01},
+        {"time": 24.3, "concentration": 0.9}
+      ]
+    },
+    "reported_outputs": {
+      "cmax": 8.33,
+      "tmax": 1.92,
+      "auclast": 88.731275488,
+      "aucinf_obs": 97.377934632,
+      "lambda_z": 0.104086444,
+      "half_life": 6.659341563
+    },
+    "tolerances": {
+      "relative": {
+        "cmax": 0.10,
+        "auclast": 0.10,
+        "aucinf_obs": 0.10,
+        "lambda_z": 0.15,
+        "half_life": 0.15
+      },
+      "absolute": {
+        "tmax": 0.01
+      }
+    }
+  },
+  {
+    "case_id": "theoph_subject_8",
+    "compound": "theophylline",
+    "source": "Boeckmann AJ, Sheiner LB, Beal SL. NONMEM Users Guide: Part V, 1994; Theoph dataset as distributed with R datasets/nlme.",
+    "source_url": "https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/Theoph.html",
+    "notes": "Classic oral theophylline serum concentration-time benchmark. Outputs are benchmark NCA values calculated from the tabular source data using linear-up/log-down AUC and manual terminal points listed here.",
+    "profile": {
+      "compound_id": "theophylline",
+      "study_id": "Theoph",
+      "subject_id": "8",
+      "species": "human",
+      "matrix": "serum",
+      "route": "extravascular",
+      "dose": 319.365,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [7.15, 9.07, 12.1, 24.12],
+      "observations": [
+        {"time": 0, "concentration": 0},
+        {"time": 0.25, "concentration": 3.05},
+        {"time": 0.52, "concentration": 3.05},
+        {"time": 0.98, "concentration": 7.31},
+        {"time": 2.02, "concentration": 7.56},
+        {"time": 3.53, "concentration": 6.59},
+        {"time": 5.05, "concentration": 5.88},
+        {"time": 7.15, "concentration": 4.73},
+        {"time": 9.07, "concentration": 4.57},
+        {"time": 12.1, "concentration": 3},
+        {"time": 24.12, "concentration": 1.25}
+      ]
+    },
+    "reported_outputs": {
+      "cmax": 7.56,
+      "tmax": 2.02,
+      "auclast": 86.806563478,
+      "aucinf_obs": 102.291087104,
+      "lambda_z": 0.080725764,
+      "half_life": 8.586443115
+    },
+    "tolerances": {
+      "relative": {
+        "cmax": 0.10,
+        "auclast": 0.10,
+        "aucinf_obs": 0.10,
+        "lambda_z": 0.15,
+        "half_life": 0.15
+      },
+      "absolute": {
+        "tmax": 0.01
+      }
+    }
+  }
+]

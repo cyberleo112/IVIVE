@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dog Hepatocyte IVIVE to NCA Comparison</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #5f6b7a;
+      --line: #d9e2ec;
+      --page: #f5f7fa;
+      --panel: #ffffff;
+      --nca: #2f6fed;
+      --ivive: #1f8a70;
+      --good: #1f8a70;
+      --warn: #b95000;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--page);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    h3 { margin: 0 0 10px; font-size: 16px; }
+    p { margin: 0 0 12px; color: var(--muted); }
+
+    .card,
+    .metric,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(31, 41, 51, 0.04);
+    }
+
+    .card { padding: 18px; margin: 18px 0; }
+    .panel { padding: 14px; background: #fbfcfe; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .metric { padding: 14px; }
+    .metric strong { display: block; font-size: 24px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      align-items: start;
+    }
+
+    .badge {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin: 0 6px 6px 0;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2f7;
+      color: #334e68;
+    }
+
+    .badge.good { background: #e3f8f0; color: var(--good); }
+    .badge.warn { background: #fff4e5; color: var(--warn); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 8px 7px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334e68;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .bars {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 150px 1fr 130px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .bar-track {
+      height: 14px;
+      background: #e8eef5;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .bar.nca { background: var(--nca); width: 100%; }
+    .bar.ivive { background: var(--warn); width: 30.1%; }
+
+    .note-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .metrics,
+      .grid { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 110px 1fr 96px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Dog Hepatocyte IVIVE to NCA Comparison</h1>
+      <p>
+        Ad hoc benchmark from user-provided dog IV 1 mg/kg plasma concentration-time data and corrected dog hepatocyte IVIVE inputs.
+        No independent literature-reported clearance was supplied, so the comparison is IVIVE predicted clearance vs NCA-derived observed clearance.
+      </p>
+      <span class="badge warn">IVIVE outside 2-fold and 3-fold</span>
+      <span class="badge">Species: dog</span>
+      <span class="badge">System: hepatocyte</span>
+      <span class="badge">Route: IV bolus</span>
+    </header>
+
+    <section class="metrics">
+      <div class="metric">
+        <strong>0.0999</strong>
+        <span>NCA CL, L/h/kg</span>
+      </div>
+      <div class="metric">
+        <strong>0.0301</strong>
+        <span>IVIVE CL, L/h/kg</span>
+      </div>
+      <div class="metric">
+        <strong>3.32x</strong>
+        <span>fold error</span>
+      </div>
+      <div class="metric">
+        <strong>7.50 h</strong>
+        <span>NCA terminal half-life</span>
+      </div>
+      <div class="metric">
+        <strong>0.803</strong>
+        <span>NCA Vss, L/kg</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Observed vs Predicted Clearance</h2>
+      <div class="grid">
+        <div class="panel">
+          <h3>Clearance Per kg</h3>
+          <div class="bars">
+            <div class="bar-row">
+              <span>NCA observed</span>
+              <span class="bar-track"><span class="bar nca"></span></span>
+              <span class="num">0.0999 L/h/kg</span>
+            </div>
+            <div class="bar-row">
+              <span>IVIVE predicted</span>
+              <span class="bar-track"><span class="bar ivive"></span></span>
+              <span class="num">0.0301 L/h/kg</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Comparison</h3>
+          <table>
+            <tbody>
+              <tr><th>Metric</th><th>Value</th></tr>
+              <tr><td>Predicted / observed ratio</td><td class="num">0.3013</td></tr>
+              <tr><td>Fold error</td><td class="num">3.3191</td></tr>
+              <tr><td>Percent error</td><td class="num">-69.87%</td></tr>
+              <tr><td>Within 2-fold?</td><td><span class="badge warn">No</span></td></tr>
+              <tr><td>Within 3-fold?</td><td><span class="badge warn">No</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>NCA Module Output</h2>
+      <div class="grid">
+        <div class="panel">
+          <h3>Raw Plasma Profile</h3>
+          <table>
+            <thead><tr><th>Time (h)</th><th>Concentration (ng/mL)</th></tr></thead>
+            <tbody>
+              <tr><td class="num">0.0833</td><td class="num">1014</td></tr>
+              <tr><td class="num">0.25</td><td class="num">1077</td></tr>
+              <tr><td class="num">0.5</td><td class="num">1257</td></tr>
+              <tr><td class="num">1</td><td class="num">1313</td></tr>
+              <tr><td class="num">2</td><td class="num">1183</td></tr>
+              <tr><td class="num">4</td><td class="num">944</td></tr>
+              <tr><td class="num">6</td><td class="num">598.3</td></tr>
+              <tr><td class="num">8</td><td class="num">317.7</td></tr>
+              <tr><td class="num">24</td><td class="num">58.47</td></tr>
+              <tr><td class="num">48</td><td class="num">7.69</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>Calculated NCA Parameters</h3>
+          <table>
+            <tbody>
+              <tr><th>Parameter</th><th>Value</th></tr>
+              <tr><td>Cmax</td><td class="num">1313 ng/mL</td></tr>
+              <tr><td>Tmax</td><td class="num">1 h</td></tr>
+              <tr><td>AUClast</td><td class="num">9927.39 ng*h/mL</td></tr>
+              <tr><td>AUCinf_obs</td><td class="num">10010.65 ng*h/mL</td></tr>
+              <tr><td>AUMClast</td><td class="num">75607.44 ng*h^2/mL</td></tr>
+              <tr><td>AUMCinf_obs</td><td class="num">80505.57 ng*h^2/mL</td></tr>
+              <tr><td>MRTlast</td><td class="num">7.616 h</td></tr>
+              <tr><td>MRTinf_obs</td><td class="num">8.042 h</td></tr>
+              <tr><td>lambda_z / kel</td><td class="num">0.09236 1/h</td></tr>
+              <tr><td>half_life</td><td class="num">7.505 h</td></tr>
+              <tr><td>AUC extrapolated</td><td class="num">0.832%</td></tr>
+              <tr><td>CL, total for 10 kg dog</td><td class="num">0.9989 L/h</td></tr>
+              <tr><td>CL, normalized</td><td class="num">0.09989 L/h/kg = 1.665 mL/min/kg</td></tr>
+              <tr><td>Vz</td><td class="num">10.816 L = 1.082 L/kg</td></tr>
+              <tr><td>Vss_obs</td><td class="num">8.033 L = 0.803 L/kg</td></tr>
+              <tr><td>lambda_z R²</td><td class="num">0.9961</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>IVIVE Module Output</h2>
+      <div class="grid">
+        <div class="panel">
+          <h3>Raw IVIVE Inputs</h3>
+          <table>
+            <tbody>
+              <tr><th>Input</th><th>Value</th></tr>
+              <tr><td>Species</td><td>dog</td></tr>
+              <tr><td>System</td><td>hepatocyte</td></tr>
+              <tr><td>In vitro CLint</td><td class="num">3.2 uL/min/10^6 cells</td></tr>
+              <tr><td>fu_inc</td><td class="num">0.84</td></tr>
+              <tr><td>fu_p</td><td class="num">0.0346, or 3.46%</td></tr>
+              <tr><td>Blood/plasma ratio</td><td class="num">0.7147</td></tr>
+              <tr><td>Dog model</td><td>GastroPlus defaults</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>Predicted IVIVE Parameters</h3>
+          <table>
+            <tbody>
+              <tr><th>Parameter</th><th>Value</th></tr>
+              <tr><td>Unbound in vitro CLint</td><td class="num">3.810 uL/min/10^6 cells</td></tr>
+              <tr><td>Scaled unbound liver CLint</td><td class="num">8.901 L/h</td></tr>
+              <tr><td>Predicted hepatic plasma CL, total</td><td class="num">0.3010 L/h</td></tr>
+              <tr><td>Predicted hepatic plasma CL, normalized</td><td class="num">0.03010 L/h/kg = 0.5016 mL/min/kg</td></tr>
+              <tr><td>Plasma extraction ratio</td><td class="num">0.02271</td></tr>
+              <tr><td>Clearance classification</td><td>Low</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Assumptions</h2>
+      <ul class="note-list">
+        <li>The app's dog GastroPlus defaults were used: 10 kg body weight, 18.54 L/h liver blood flow, 324.5 g liver weight, and 120 million hepatocytes/g liver.</li>
+        <li>IV 1 mg/kg was converted to 10 mg total dose for the 10 kg default dog.</li>
+        <li>Concentration units were treated as ng/mL, equivalent to ug/L. The NCA dose was therefore entered as 10000 ug.</li>
+        <li>Terminal lambda_z used the 8, 24, and 48 h points.</li>
+        <li>MRT and Vss use IV bolus NCA first-moment equations: AUMC extrapolated to infinity, MRTinf_obs = AUMCinf_obs/AUCinf_obs, and Vss_obs = CL x MRTinf_obs.</li>
+        <li>No independent literature-reported observed clearance was provided for this ad hoc case.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

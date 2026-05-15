@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raw IVIVE to NCA Connection Benchmark</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;color:#1f2933;line-height:1.45}
+main{max-width:1180px;margin:0 auto;padding:28px 20px 48px}
+h1{font-size:30px;margin:0 0 8px} h2{font-size:20px;margin:0 0 8px} h2 span{font-size:13px;color:#5f6b7a;font-weight:400}
+h3{font-size:16px;margin:0 0 10px} p{color:#5f6b7a;margin:0 0 12px}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.metric,.case,.panel{background:white;border:1px solid #d9e2ec;border-radius:8px;box-shadow:0 1px 2px rgba(31,41,51,.04)}
+.metric{padding:14px} .metric strong{display:block;font-size:24px}
+.case{padding:18px;margin:18px 0} .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px} .panel{padding:14px;background:#fbfcfe}
+.badge{display:inline-flex;padding:3px 8px;border-radius:999px;background:#eef2f7;color:#334e68;font-size:12px;font-weight:700;margin:0 6px 6px 0}
+.badge.good{background:#e3f8f0;color:#1f8a70} .badge.bad{background:#fee4e2;color:#b42318}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{text-align:left;padding:8px 7px;border-bottom:1px solid #d9e2ec;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:#f1f5f9;color:#334e68} tr:last-child td{border-bottom:0}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap} .bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:120px 1fr 86px;gap:10px;align-items:center;font-size:13px}
+.bar-track{height:13px;border-radius:999px;background:#e8eef5;overflow:hidden} .bar{display:block;height:100%;border-radius:999px}
+.bar.nca{background:#2f6fed} .bar.reported{background:#6f42c1} .bar.ivive{background:#1f8a70} .bar.badbar{background:#b42318}
+.source{font-size:12px;margin-top:12px} a{color:#2557a7;text-decoration:none} a:hover{text-decoration:underline}
+@media(max-width:860px){.summary,.grid{grid-template-columns:1fr}.bar-row{grid-template-columns:96px 1fr 72px}}
+</style>
+</head>
+<body><main>
+<header>
+  <h1>Raw IVIVE to NCA Connection Benchmark</h1>
+  <p>Transparent module-by-module report from raw or curated PK benchmark inputs.</p>
+  <p><strong>Verification:</strong> python -m pytest tests -q --ignore=_extract -p no:cacheprovider -&gt; 40 passed</p>
+</header>
+<section class="summary">
+  <div class="metric"><strong>3</strong><span>cases</span></div>
+  <div class="metric"><strong>4</strong><span>IVIVE predictions</span></div>
+  <div class="metric"><strong>3/4</strong><span>within 2-fold vs NCA</span></div>
+  <div class="metric"><strong>3</strong><span>NCA profiles calculated</span></div>
+</section>
+
+    <section class="case">
+      <h2>midazolam <span>microsome_good_case</span></h2>
+      <p>Raw NCA rows are a literature-anchored monoexponential IV profile reconstructed from reported midazolam clearance range and half-life/volume behavior, not plot digitization. IVIVE inputs are raw HLM-style values chosen from the reported benzodiazepine/HLM benchmark range to exercise the current well-stirred microsome pathway.</p>
+      <div class="badges"><span class="badge good">microsome within 2-fold</span></div>
+      <div class="grid">
+        <div class="panel"><h3>Clearance</h3><div class="bars"><div class="bar-row"><span>NCA CL</span><span class="bar-track"><span class="bar nca" style="width:99.4%"></span></span><span class="num">30 L/h</span></div><div class="bar-row"><span>Reported CL</span><span class="bar-track"><span class="bar reported" style="width:99.4%"></span></span><span class="num">30 L/h</span></div><div class="bar-row"><span>microsome IVIVE</span><span class="bar-track"><span class="bar ivive" style="width:100.0%"></span></span><span class="num">30.1909 L/h</span></div></div></div>
+        <div class="panel"><h3>Comparisons</h3><table><thead><tr><th>Comparison</th><th>Observed CL</th><th>Predicted CL</th><th>Fold error</th><th>Status</th></tr></thead><tbody><tr><td>human_liver_microsome vs NCA</td><td class="num">30</td><td class="num">30.1909</td><td class="num">1.0064</td><td><span class="badge good">within 2-fold</span></td></tr><tr><td>human_liver_microsome vs reported</td><td class="num">30</td><td class="num">30.1909</td><td class="num">1.0064</td><td><span class="badge good">within 2-fold</span></td></tr></tbody></table></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><h3>NCA Output</h3><table><tbody><tr><th>NCA parameter</th><th>Value</th></tr><tr><td>Cmax</td><td class="num">0.1 mg/L</td></tr><tr><td>Tmax</td><td class="num">0 h</td></tr><tr><td>AUClast</td><td class="num">0.3242 mg/L*h</td></tr><tr><td>AUCinf_obs</td><td class="num">0.3333 mg/L*h</td></tr><tr><td>lambda_z / kel</td><td class="num">0.3 1/h</td></tr><tr><td>half_life</td><td class="num">2.3105 h</td></tr><tr><td>AUC extrapolated</td><td class="num">2.7324 %</td></tr><tr><td>CL</td><td class="num">30 L/h</td></tr></tbody></table></div>
+        <div class="panel"><h3>IVIVE Output</h3><table><thead><tr><th>Label</th><th>System</th><th>CLint</th><th>fu_inc / fu_p / Rbp</th><th>CLint liver</th><th>Predicted CL</th><th>Extraction</th><th>Class</th></tr></thead><tbody><tr><td>human_liver_microsome</td><td>microsome</td><td class="num">20 uL/min/mg microsomal protein</td><td class="num">1 / 1 / 0.6</td><td class="num">74.7384 L/h</td><td class="num">30.1909 L/h</td><td class="num">0.596</td><td>Moderate</td></tr></tbody></table></div>
+      </div>
+      <p class="source">Source: <a href="https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=b95415fa-17c2-42ab-a6b0-e628d01c94ed&amp;type=display">Midazolam clinical PK range from DailyMed/FDA labeling; human liver microsome IVIVE context from Rawden et al., Br J Clin Pharmacol 2005 and Obach, Drug Metab Dispos 1999/2001 reviews.</a></p>
+    </section>
+    
+
+    <section class="case">
+      <h2>diclofenac <span>hepatocyte_good_case</span></h2>
+      <p>Raw NCA rows are a literature-anchored monoexponential IV profile reconstructed from reported diclofenac IV clearance and terminal half-life behavior, not plot digitization. Protein binding is intentionally set to 1.0 for this benchmark to match the no-protein-binding IVIVE mode often used to reduce systematic underprediction in early discovery screens.</p>
+      <div class="badges"><span class="badge good">hepatocyte within 2-fold</span></div>
+      <div class="grid">
+        <div class="panel"><h3>Clearance</h3><div class="bars"><div class="bar-row"><span>NCA CL</span><span class="bar-track"><span class="bar nca" style="width:53.5%"></span></span><span class="num">20.4 L/h</span></div><div class="bar-row"><span>Reported CL</span><span class="bar-track"><span class="bar reported" style="width:53.5%"></span></span><span class="num">20.4 L/h</span></div><div class="bar-row"><span>hepatocyte IVIVE</span><span class="bar-track"><span class="bar ivive" style="width:100.0%"></span></span><span class="num">38.1023 L/h</span></div></div></div>
+        <div class="panel"><h3>Comparisons</h3><table><thead><tr><th>Comparison</th><th>Observed CL</th><th>Predicted CL</th><th>Fold error</th><th>Status</th></tr></thead><tbody><tr><td>cryopreserved_human_hepatocytes vs NCA</td><td class="num">20.4</td><td class="num">38.1023</td><td class="num">1.8678</td><td><span class="badge good">within 2-fold</span></td></tr><tr><td>cryopreserved_human_hepatocytes vs reported</td><td class="num">20.4</td><td class="num">38.1023</td><td class="num">1.8678</td><td><span class="badge good">within 2-fold</span></td></tr></tbody></table></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><h3>NCA Output</h3><table><tbody><tr><th>NCA parameter</th><th>Value</th></tr><tr><td>Cmax</td><td class="num">0.45 mg/L</td></tr><tr><td>Tmax</td><td class="num">0 h</td></tr><tr><td>AUClast</td><td class="num">1.0076 mg/L*h</td></tr><tr><td>AUCinf_obs</td><td class="num">1.1029 mg/L*h</td></tr><tr><td>lambda_z / kel</td><td class="num">0.408 1/h</td></tr><tr><td>half_life</td><td class="num">1.6989 h</td></tr><tr><td>AUC extrapolated</td><td class="num">8.6466 %</td></tr><tr><td>CL</td><td class="num">20.4 L/h</td></tr></tbody></table></div>
+        <div class="panel"><h3>IVIVE Output</h3><table><thead><tr><th>Label</th><th>System</th><th>CLint</th><th>fu_inc / fu_p / Rbp</th><th>CLint liver</th><th>Predicted CL</th><th>Extraction</th><th>Class</th></tr></thead><tbody><tr><td>cryopreserved_human_hepatocytes</td><td>hepatocyte</td><td class="num">18 uL/min/10^6 cells</td><td class="num">1 / 1 / 0.55</td><td class="num">212.4144 L/h</td><td class="num">38.1023 L/h</td><td class="num">0.8206</td><td>High</td></tr></tbody></table></div>
+      </div>
+      <p class="source">Source: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC1884962/">Diclofenac IV PK clearance from published healthy-volunteer IV studies; hepatocyte CLint benchmark from Li et al., Drug Metab Dispos 2009 comparison of fresh and cryopreserved human hepatocytes.</a></p>
+    </section>
+    
+
+    <section class="case">
+      <h2>rosuvastatin <span>hepatocyte_good_microsome_poor_case</span></h2>
+      <p>Raw NCA rows are a literature-anchored monoexponential IV hepatic-clearance profile reconstructed from reported rosuvastatin clearance/disposition behavior, not plot digitization. The paired IVIVE inputs intentionally contrast hepatocyte uptake-sensitive clearance with low microsomal metabolic turnover.</p>
+      <div class="badges"><span class="badge good">hepatocyte within 2-fold</span><span class="badge bad">microsome outside 2-fold</span></div>
+      <div class="grid">
+        <div class="panel"><h3>Clearance</h3><div class="bars"><div class="bar-row"><span>NCA CL</span><span class="bar-track"><span class="bar nca" style="width:77.2%"></span></span><span class="num">36 L/h</span></div><div class="bar-row"><span>Reported CL</span><span class="bar-track"><span class="bar reported" style="width:77.2%"></span></span><span class="num">36 L/h</span></div><div class="bar-row"><span>hepatocyte IVIVE</span><span class="bar-track"><span class="bar ivive" style="width:100.0%"></span></span><span class="num">46.6475 L/h</span></div><div class="bar-row"><span>microsome IVIVE</span><span class="bar-track"><span class="bar badbar" style="width:14.0%"></span></span><span class="num">6.5129 L/h</span></div></div></div>
+        <div class="panel"><h3>Comparisons</h3><table><thead><tr><th>Comparison</th><th>Observed CL</th><th>Predicted CL</th><th>Fold error</th><th>Status</th></tr></thead><tbody><tr><td>human_hepatocyte_uptake_sensitive vs NCA</td><td class="num">36</td><td class="num">46.6475</td><td class="num">1.2958</td><td><span class="badge good">within 2-fold</span></td></tr><tr><td>human_hepatocyte_uptake_sensitive vs reported</td><td class="num">36</td><td class="num">46.6475</td><td class="num">1.2958</td><td><span class="badge good">within 2-fold</span></td></tr><tr><td>human_liver_microsome_low_turnover vs NCA</td><td class="num">36</td><td class="num">6.5129</td><td class="num">5.5275</td><td><span class="badge bad">outside 2-fold</span></td></tr><tr><td>human_liver_microsome_low_turnover vs reported</td><td class="num">36</td><td class="num">6.5129</td><td class="num">5.5275</td><td><span class="badge bad">outside 2-fold</span></td></tr></tbody></table></div>
+      </div>
+      <div class="grid">
+        <div class="panel"><h3>NCA Output</h3><table><tbody><tr><th>NCA parameter</th><th>Value</th></tr><tr><td>Cmax</td><td class="num">0.0357 mg/L</td></tr><tr><td>Tmax</td><td class="num">0 h</td></tr><tr><td>AUClast</td><td class="num">0.1386 mg/L*h</td></tr><tr><td>AUCinf_obs</td><td class="num">0.1389 mg/L*h</td></tr><tr><td>lambda_z / kel</td><td class="num">0.2571 1/h</td></tr><tr><td>half_life</td><td class="num">2.6956 h</td></tr><tr><td>AUC extrapolated</td><td class="num">0.2088 %</td></tr><tr><td>CL</td><td class="num">36 L/h</td></tr></tbody></table></div>
+        <div class="panel"><h3>IVIVE Output</h3><table><thead><tr><th>Label</th><th>System</th><th>CLint</th><th>fu_inc / fu_p / Rbp</th><th>CLint liver</th><th>Predicted CL</th><th>Extraction</th><th>Class</th></tr></thead><tbody><tr><td>human_hepatocyte_uptake_sensitive</td><td>hepatocyte</td><td class="num">50 uL/min/10^6 cells</td><td class="num">1 / 1 / 0.6</td><td class="num">590.04 L/h</td><td class="num">46.6475 L/h</td><td class="num">0.9209</td><td>High</td></tr><tr><td>human_liver_microsome_low_turnover</td><td>microsome</td><td class="num">2 uL/min/mg microsomal protein</td><td class="num">1 / 1 / 0.6</td><td class="num">7.4738 L/h</td><td class="num">6.5129 L/h</td><td class="num">0.1286</td><td>Low</td></tr></tbody></table></div>
+      </div>
+      <p class="source">Source: <a href="https://pubchem.ncbi.nlm.nih.gov/compound/Rosuvastatin">Rosuvastatin human disposition and hepatic/renal clearance split from FDA labeling/PubChem summaries; transporter-mediated hepatocyte IVIVE rationale from rosuvastatin OATP/hepatocyte PBPK literature.</a></p>
+    </section>
+    
+<section class="case"><h2>Method Notes</h2>
+<p>Values are generated by project modules at report time. Label reconstructed or externally curated inputs clearly in each case note. This report is a benchmark/regression artifact, not formal regulatory software validation.</p>
+</section>
+</main></body></html>

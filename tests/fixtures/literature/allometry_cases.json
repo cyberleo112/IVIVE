@@ -1,0 +1,85 @@
+[
+  {
+    "case_id": "alogliptin_iv_clearance",
+    "compound": "alogliptin",
+    "source": "Gilibili RR, Bhamidipati RK, Mullangi R, Srinivas NR. Retrospective and Prospective Human Intravenous and Oral Pharmacokinetic Projection of DPP-IV Inhibitors Using Simple Allometric Principles. J Pharm Pharm Sci. 2015;18(3):434-447.",
+    "source_url": "https://journals.library.ualberta.ca/jpps/index.php/JPPS/article/view/24158",
+    "notes": "Animal IV clearance rows are from Table 2. Published simple allometry equation is from Table 3/Figure 2: CL = 1.867 * W^0.780, R2 = 0.744. Values are converted from mL/h/kg to total L/h before fitting because the paper's allometry plots total clearance vs body weight.",
+    "target_body_weight_kg": 70,
+    "rows": [
+      {"species": "rat", "body_weight_kg": 0.27, "parameter": "clearance", "value": 0.80244, "unit": "L/h"},
+      {"species": "dog", "body_weight_kg": 9, "parameter": "clearance", "value": 21.915, "unit": "L/h"},
+      {"species": "monkey", "body_weight_kg": 4.6, "parameter": "clearance", "value": 2.4334, "unit": "L/h"}
+    ],
+    "reported_outputs": {
+      "coefficient": 1.867,
+      "exponent": 0.780,
+      "r_squared": 0.744,
+      "predicted_value": 51.324034609
+    },
+    "tolerances": {
+      "relative": {
+        "coefficient": 0.02,
+        "exponent": 0.02,
+        "r_squared": 0.02,
+        "predicted_value": 0.02
+      }
+    }
+  },
+  {
+    "case_id": "sitagliptin_iv_clearance",
+    "compound": "sitagliptin",
+    "source": "Gilibili RR, Bhamidipati RK, Mullangi R, Srinivas NR. Retrospective and Prospective Human Intravenous and Oral Pharmacokinetic Projection of DPP-IV Inhibitors Using Simple Allometric Principles. J Pharm Pharm Sci. 2015;18(3):434-447.",
+    "source_url": "https://journals.library.ualberta.ca/jpps/index.php/JPPS/article/view/24158",
+    "notes": "Animal IV clearance rows are from Table 2. Published simple allometry equation is from Table 3/Figure 4: CL = 2.020 * W^0.529, R2 = 0.734. Values are converted from mL/h/kg to total L/h before fitting. Tolerance is wider because the published table/figure values are rounded.",
+    "target_body_weight_kg": 70,
+    "rows": [
+      {"species": "rat", "body_weight_kg": 0.25, "parameter": "clearance", "value": 0.9, "unit": "L/h"},
+      {"species": "dog", "body_weight_kg": 9, "parameter": "clearance", "value": 3.24, "unit": "L/h"},
+      {"species": "monkey", "body_weight_kg": 6, "parameter": "clearance", "value": 10.08, "unit": "L/h"}
+    ],
+    "reported_outputs": {
+      "coefficient": 2.020,
+      "exponent": 0.529,
+      "r_squared": 0.734,
+      "predicted_value": 19.116493462
+    },
+    "tolerances": {
+      "relative": {
+        "coefficient": 0.05,
+        "exponent": 0.05,
+        "r_squared": 0.08,
+        "predicted_value": 0.10
+      }
+    }
+  },
+  {
+    "case_id": "vildagliptin_iv_clearance",
+    "compound": "vildagliptin",
+    "source": "Gilibili RR, Bhamidipati RK, Mullangi R, Srinivas NR. Retrospective and Prospective Human Intravenous and Oral Pharmacokinetic Projection of DPP-IV Inhibitors Using Simple Allometric Principles. J Pharm Pharm Sci. 2015;18(3):434-447.",
+    "source_url": "https://journals.library.ualberta.ca/jpps/index.php/JPPS/article/view/24158",
+    "notes": "Animal IV clearance rows are from Table 2. Published simple allometry equation is from Table 3/Figure 5: CL = 1.959 * W^0.847, R2 = 0.999. Values are converted from mL/h/kg to total L/h before fitting. Tolerance is wider because mouse body-weight rounding affects the slope.",
+    "target_body_weight_kg": 70,
+    "rows": [
+      {"species": "mouse", "body_weight_kg": 0.03, "parameter": "clearance", "value": 0.105, "unit": "L/h"},
+      {"species": "rat", "body_weight_kg": 0.25, "parameter": "clearance", "value": 0.6, "unit": "L/h"},
+      {"species": "rabbit", "body_weight_kg": 3, "parameter": "clearance", "value": 4.8, "unit": "L/h"},
+      {"species": "dog", "body_weight_kg": 9, "parameter": "clearance", "value": 11.7, "unit": "L/h"},
+      {"species": "monkey", "body_weight_kg": 6, "parameter": "clearance", "value": 8.4, "unit": "L/h"}
+    ],
+    "reported_outputs": {
+      "coefficient": 1.959,
+      "exponent": 0.847,
+      "r_squared": 0.999,
+      "predicted_value": 71.586721938
+    },
+    "tolerances": {
+      "relative": {
+        "coefficient": 0.05,
+        "exponent": 0.05,
+        "r_squared": 0.02,
+        "predicted_value": 0.12
+      }
+    }
+  }
+]

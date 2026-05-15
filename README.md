@@ -24,6 +24,22 @@ E_h            = CL_p / (R_bp * Q_h)
 Where `scaling` is HPGL (M cells / g liver) for hepatocytes or MPPGL (mg / g
 liver) for microsomes.
 
+### Clearance classification
+
+The predicted hepatic extraction ratio (`E_h`, expressed as a percentage) is
+classified as:
+
+| Class    | Criterion             |
+| -------- | --------------------- |
+| Low      | `E_h < 30%`           |
+| Moderate | `30% <= E_h <= 70%`   |
+| High     | `E_h > 70%`           |
+
+The classification is returned by the API as
+`clearance_classification` on the single calculation response and on each batch
+row, and is also shown in the UI under "Predicted in vivo clearance" and as a
+column in the batch results table / exported file.
+
 ## Quick start
 
 Requires Python 3.10+.
@@ -40,6 +56,18 @@ To run the validation tests via pytest:
 pytest -q
 ```
 
+The test suite also includes literature benchmark case studies for the PK
+modules:
+
+- **NCA:** three individual Theoph oral theophylline serum profiles with
+  tabular concentration-time inputs and benchmark NCA outputs.
+- **Allometry:** three DPP-IV inhibitor IV clearance scaling cases from
+  Gilibili et al. 2015 using published animal PK rows and simple allometry
+  equations.
+
+These are discovery benchmark tests with documented tolerances, not formal
+regulatory software validation.
+
 The original CLI still works:
 
 ```bash
@@ -55,9 +83,14 @@ Three tabs:
 
 1. **Single** — pick species + system, enter CLint, fu_inc, fu_p, Rbp; an
   optional Advanced section lets you override Q_h, liver weight, HPGL, MPPGL.
+  The result panel shows `CL_p`, `E_h`, and a Low / Moderate / High
+  classification.
 2. **Batch (Excel)** — download the input template, fill it in, upload, and
-  run. Per-row override columns are supported for any compound. Results can
-   be downloaded as `.xlsx` or `.csv`.
+  run. Species and in-vitro system are dropdowns in the template; CLint /
+  fu_inc / fu_p columns show units and accepted ranges (matching the single
+  UI). Per-row override columns are supported for any compound. Results
+  include a clearance classification column and can be downloaded as `.xlsx`
+  or `.csv`.
 3. **Validation** — runs the 11 reference cases and reports pass/fail with
   tolerances ±2% on CL_p and ±0.5 pp on E_h.
 
@@ -72,6 +105,9 @@ Three tabs:
 | POST   | `/api/batch`                | Upload `.xlsx`/`.csv`; returns JSON       |
 | POST   | `/api/batch/export?format=` | Export batch results as `xlsx` or `csv`   |
 | GET    | `/api/validation`           | Run the 11 built-in validation cases      |
+| POST   | `/api/nca/plasma`           | Plasma/blood/serum NCA for one or more profiles |
+| POST   | `/api/allometry/scale`      | Standalone allometric scaling from species PK rows |
+| POST   | `/api/prediction/compare`   | Observed-vs-predicted PK fold-error comparison |
 
 
 OpenAPI docs auto-generated at `http://localhost:8000/docs`.
@@ -95,18 +131,33 @@ curl -s http://localhost:8000/api/calculate \
 `clint_in_vitro`, `fu_inc`, `fu_p`, `rbp`, plus optional override columns
 `liver_blood_flow_L_per_h`, `liver_weight_g`, `hpgl`, `mppgl`. Two example
 rows are pre-filled.
+  - **Dropdowns** — `species` is a dropdown with `human / mouse / rat / dog /
+    monkey`, and `system` is a dropdown with `hepatocyte / microsome`.
+  - **Units & ranges in headers** — `clint_in_vitro` shows
+    `uL/min/million cells (hep) or uL/min/mg (mic)`, and `fu_inc` / `fu_p`
+    show the accepted `0 < value <= 1` range, matching the single-compound UI.
+    Excel data validation also enforces these ranges and CLint >= 0.
 - **Instructions** — units, accepted aliases, and a reference table of species
 defaults.
 
 Aliases accepted in the `species` column: `human`/`man`, `mouse`/`mice`,
 `rat`, `dog`/`beagle`, `cyno`/`cynomolgus`/`monkey`/`nhp`. The `system` column
-accepts `hepatocyte`/`hep` or `microsome`/`mlm`/`rlm`/`hmm`.
+accepts `hepatocyte`/`hep` or `microsome`/`mlm`/`rlm`/`hmm`. Headers may
+include unit/range hints in parentheses (matching the template); they are
+stripped automatically when parsing.
+
+Exported batch result files include a `clearance_classification` column
+(Low / Moderate / High) alongside `clp_L_per_h`, `clp_mL_per_min`, and
+`eh_percent`.
 
 ## Project layout
 
 ```
 app/
   core.py        # IVIVE math + species defaults (single source of truth)
+  nca.py         # Plasma/blood/serum NCA calculations
+  allometry.py   # Standalone allometric scaling
+  comparison.py  # Observed-vs-predicted fold-error comparisons
   schemas.py     # Pydantic request/response models
   batch.py       # Excel template + batch I/O
   validation.py  # 11 built-in validation cases
@@ -116,14 +167,68 @@ static/
   app.js         # Vanilla JS frontend
 tests/
   test_ivive.py  # pytest over all 11 validation cases
+  test_literature_case_studies.py  # literature benchmarks for NCA/allometry
 Hepatocyte and Microsomes Clearance IVIVE.py   # original CLI (now imports app.core)
 IVIVE validation.md                             # source of validation cases
 ```
+
+## Deploy to Firebase + Cloud Run
+
+The app is deployed as two pieces, both inside the `ivive-2273c` GCP/Firebase
+project:
+
+- **Static frontend** (`static/`) → Firebase Hosting, served from
+  `https://ivive-2273c.web.app` (and `https://ivive-2273c.firebaseapp.com`).
+- **FastAPI backend** (`app/`, packaged via the included `Dockerfile`) →
+  Cloud Run service `ivive-api` in `us-central1`. Firebase Hosting rewrites
+  any request matching `/api/**` to this Cloud Run service (see
+  `firebase.json`), so the frontend keeps calling `/api/...` with no CORS
+  changes.
+
+### One-time setup
+
+```bash
+brew install --cask google-cloud-sdk        # or use the official installer
+npm install -g firebase-tools
+
+gcloud auth login
+gcloud auth application-default login
+firebase login
+
+gcloud config set project ivive-2273c
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  --project=ivive-2273c
+```
+
+### Deploy
+
+```bash
+./deploy.sh             # backend (Cloud Run) + hosting
+./deploy.sh backend     # backend only
+./deploy.sh hosting     # hosting only
+```
+
+Under the hood:
+
+1. `gcloud run deploy ivive-api --source=.` builds the `Dockerfile` with Cloud
+   Build, pushes the image, and deploys it to Cloud Run as a public service.
+2. `firebase deploy --only hosting` uploads `static/` to Firebase Hosting.
+   The `/api/**` rewrite already points at the `ivive-api` Cloud Run service.
+
+### Frontend Firebase SDK
+
+`static/firebase-init.js` initializes the Firebase JS SDK (Analytics) using
+the project's public web config. The `apiKey` value is a public client
+identifier — access is controlled by Firebase Security Rules and the
+authorized-domains list, not by hiding this value.
 
 ## Roadmap
 
 - Add database persistence for runs and uploaded compounds.
 - Add an LLM agent that calls `/api/calculate` and `/api/batch` as tools and
-interprets results (e.g., flag high-extraction compounds).
+  interprets results (e.g., flag high-extraction compounds).
+- Add optional urine/feces excretion and mass-balance modules.
 - Optional intermediate-value display in the UI (already in API payload).
-

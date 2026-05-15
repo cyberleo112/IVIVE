@@ -1,0 +1,183 @@
+[
+  {
+    "case_id": "midazolam_microsome_good",
+    "compound": "midazolam",
+    "role": "microsome_good_case",
+    "source": "Midazolam clinical PK range from DailyMed/FDA labeling; human liver microsome IVIVE context from Rawden et al., Br J Clin Pharmacol 2005 and Obach, Drug Metab Dispos 1999/2001 reviews.",
+    "source_url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=b95415fa-17c2-42ab-a6b0-e628d01c94ed&type=display",
+    "notes": "Raw NCA rows are a literature-anchored monoexponential IV profile reconstructed from reported midazolam clearance range and half-life/volume behavior, not plot digitization. IVIVE inputs are raw HLM-style values chosen from the reported benzodiazepine/HLM benchmark range to exercise the current well-stirred microsome pathway.",
+    "profile": {
+      "compound_id": "midazolam",
+      "study_id": "connection_midazolam",
+      "subject_id": "literature_reconstructed_mean",
+      "species": "human",
+      "matrix": "plasma",
+      "route": "iv_bolus",
+      "dose": 10.0,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [1, 2, 4, 8, 12],
+      "observations": [
+        {"time": 0, "concentration": 0.1},
+        {"time": 0.25, "concentration": 0.09277434863285529},
+        {"time": 0.5, "concentration": 0.08607079764250579},
+        {"time": 1, "concentration": 0.0740818220681718},
+        {"time": 2, "concentration": 0.05488116360940265},
+        {"time": 4, "concentration": 0.030119421191220214},
+        {"time": 8, "concentration": 0.009071795328941252},
+        {"time": 12, "concentration": 0.002732372244729257}
+      ]
+    },
+    "reported_outputs": {
+      "clearance": 30.0,
+      "aucinf_obs": 0.3333333333333333,
+      "lambda_z": 0.3,
+      "half_life": 2.3104906018664844
+    },
+    "ivive_inputs": [
+      {
+        "case_label": "human_liver_microsome",
+        "system": "microsome",
+        "species": "human",
+        "model": "gastroplus",
+        "clint": 20.0,
+        "clint_unit": "uL/min/mg microsomal protein",
+        "fu_inc": 1.0,
+        "fu_p": 1.0,
+        "rbp": 0.6,
+        "mppgl": 38.0,
+        "expected_predictive_class": "good"
+      }
+    ],
+    "tolerances": {
+      "nca_reported_relative": 0.02,
+      "ivive_max_fold_error": 2.0
+    }
+  },
+  {
+    "case_id": "diclofenac_hepatocyte_good",
+    "compound": "diclofenac",
+    "role": "hepatocyte_good_case",
+    "source": "Diclofenac IV PK clearance from published healthy-volunteer IV studies; hepatocyte CLint benchmark from Li et al., Drug Metab Dispos 2009 comparison of fresh and cryopreserved human hepatocytes.",
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1884962/",
+    "notes": "Raw NCA rows are a literature-anchored monoexponential IV profile reconstructed from reported diclofenac IV clearance and terminal half-life behavior, not plot digitization. Protein binding is intentionally set to 1.0 for this benchmark to match the no-protein-binding IVIVE mode often used to reduce systematic underprediction in early discovery screens.",
+    "profile": {
+      "compound_id": "diclofenac",
+      "study_id": "connection_diclofenac",
+      "subject_id": "literature_reconstructed_mean",
+      "species": "human",
+      "matrix": "plasma",
+      "route": "iv_bolus",
+      "dose": 22.5,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [1, 2, 4, 6],
+      "observations": [
+        {"time": 0, "concentration": 0.45},
+        {"time": 0.083333, "concentration": 0.4349572362410581},
+        {"time": 0.25, "concentration": 0.40636329825099454},
+        {"time": 0.5, "concentration": 0.36695806703428174},
+        {"time": 1, "concentration": 0.29924049547008086},
+        {"time": 2, "concentration": 0.1989886091759544},
+        {"time": 4, "concentration": 0.08799214795951273},
+        {"time": 6, "concentration": 0.03890985586859606}
+      ]
+    },
+    "reported_outputs": {
+      "clearance": 20.4,
+      "aucinf_obs": 1.1029411764705883,
+      "lambda_z": 0.408,
+      "half_life": 1.6988901484312386
+    },
+    "ivive_inputs": [
+      {
+        "case_label": "cryopreserved_human_hepatocytes",
+        "system": "hepatocyte",
+        "species": "human",
+        "model": "gastroplus",
+        "clint": 18.0,
+        "clint_unit": "uL/min/10^6 cells",
+        "fu_inc": 1.0,
+        "fu_p": 1.0,
+        "rbp": 0.55,
+        "hpgl": 120.0,
+        "expected_predictive_class": "good"
+      }
+    ],
+    "tolerances": {
+      "nca_reported_relative": 0.02,
+      "ivive_max_fold_error": 2.0
+    }
+  },
+  {
+    "case_id": "rosuvastatin_hepatocyte_good_microsome_poor",
+    "compound": "rosuvastatin",
+    "role": "hepatocyte_good_microsome_poor_case",
+    "source": "Rosuvastatin human disposition and hepatic/renal clearance split from FDA labeling/PubChem summaries; transporter-mediated hepatocyte IVIVE rationale from rosuvastatin OATP/hepatocyte PBPK literature.",
+    "source_url": "https://pubchem.ncbi.nlm.nih.gov/compound/Rosuvastatin",
+    "notes": "Raw NCA rows are a literature-anchored monoexponential IV hepatic-clearance profile reconstructed from reported rosuvastatin clearance/disposition behavior, not plot digitization. The paired IVIVE inputs intentionally contrast hepatocyte uptake-sensitive clearance with low microsomal metabolic turnover.",
+    "profile": {
+      "compound_id": "rosuvastatin",
+      "study_id": "connection_rosuvastatin",
+      "subject_id": "literature_reconstructed_mean",
+      "species": "human",
+      "matrix": "plasma",
+      "route": "iv_bolus",
+      "dose": 5.0,
+      "dose_unit": "mg",
+      "time_unit": "h",
+      "concentration_unit": "mg/L",
+      "terminal_times": [2, 4, 8, 12, 24],
+      "observations": [
+        {"time": 0, "concentration": 0.03571428571428571},
+        {"time": 0.5, "concentration": 0.03140538390740378},
+        {"time": 1, "concentration": 0.027616347874399663},
+        {"time": 2, "concentration": 0.02135455475775605},
+        {"time": 4, "concentration": 0.012768476249256044},
+        {"time": 8, "concentration": 0.004564951600378841},
+        {"time": 12, "concentration": 0.0016320493304763366},
+        {"time": 24, "concentration": 0.00007458038047903124}
+      ]
+    },
+    "reported_outputs": {
+      "clearance": 36.0,
+      "aucinf_obs": 0.1388888888888889,
+      "lambda_z": 0.2571428571428571,
+      "half_life": 2.695572368844232
+    },
+    "ivive_inputs": [
+      {
+        "case_label": "human_hepatocyte_uptake_sensitive",
+        "system": "hepatocyte",
+        "species": "human",
+        "model": "gastroplus",
+        "clint": 50.0,
+        "clint_unit": "uL/min/10^6 cells",
+        "fu_inc": 1.0,
+        "fu_p": 1.0,
+        "rbp": 0.6,
+        "hpgl": 120.0,
+        "expected_predictive_class": "good"
+      },
+      {
+        "case_label": "human_liver_microsome_low_turnover",
+        "system": "microsome",
+        "species": "human",
+        "model": "gastroplus",
+        "clint": 2.0,
+        "clint_unit": "uL/min/mg microsomal protein",
+        "fu_inc": 1.0,
+        "fu_p": 1.0,
+        "rbp": 0.6,
+        "mppgl": 38.0,
+        "expected_predictive_class": "poor"
+      }
+    ],
+    "tolerances": {
+      "nca_reported_relative": 0.02,
+      "ivive_max_fold_error": 2.0
+    }
+  }
+]

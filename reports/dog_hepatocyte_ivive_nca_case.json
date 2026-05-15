@@ -1,0 +1,86 @@
+{
+  "case_id": "dog_hepatocyte_user_profile",
+  "compound": "user_test_compound",
+  "source": "User-provided dog IV 1 mg/kg plasma concentration-time table and corrected IVIVE inputs from images, May 14 2026.",
+  "assumptions": [
+    "Species defaults use the app's GastroPlus dog model: 10 kg body weight, 18.54 L/h liver blood flow, 324.5 g liver weight, 120 million hepatocytes/g liver.",
+    "IV dose was converted from 1 mg/kg to 10 mg total dose for a 10 kg dog.",
+    "Concentration units were converted as ng/mL = ug/L; dose was converted to 10000 ug, giving NCA clearance in L/h for a 10 kg dog and L/h/kg after division by 10.",
+    "Terminal lambda_z used manual points at 8, 24, and 48 h.",
+    "No independent literature-reported clearance was supplied for this ad hoc case, so comparison is IVIVE vs NCA-derived observed clearance."
+  ],
+  "profile": {
+    "compound_id": "user_test_compound",
+    "study_id": "dog_iv_1_mg_per_kg_user_image",
+    "subject_id": "mean_profile",
+    "species": "dog",
+    "matrix": "plasma",
+    "route": "iv_bolus",
+    "dose": 10000,
+    "dose_unit": "ug per 10 kg dog",
+    "time_unit": "h",
+    "concentration_unit": "ug/L",
+    "terminal_times": [8, 24, 48],
+    "observations": [
+      {"time": 0.0833, "concentration": 1014},
+      {"time": 0.25, "concentration": 1077},
+      {"time": 0.5, "concentration": 1257},
+      {"time": 1, "concentration": 1313},
+      {"time": 2, "concentration": 1183},
+      {"time": 4, "concentration": 944},
+      {"time": 6, "concentration": 598.3},
+      {"time": 8, "concentration": 317.7},
+      {"time": 24, "concentration": 58.47},
+      {"time": 48, "concentration": 7.69}
+    ]
+  },
+  "ivive_input": {
+    "system": "hepatocyte",
+    "species": "dog",
+    "model": "gastroplus",
+    "clint": 3.2,
+    "clint_unit": "uL/min/10^6 cells",
+    "fu_inc": 0.84,
+    "fu_p": 0.0346,
+    "blood_to_plasma_ratio": 0.7147
+  },
+  "results": {
+    "nca": {
+      "cmax": 1313,
+      "tmax": 1,
+      "auclast": 9927.390876368943,
+      "aucinf_obs": 10010.653628777798,
+      "aumclast": 75607.43590909286,
+      "aumcinf_obs": 80505.56765263704,
+      "mrtlast": 7.616043011771402,
+      "mrtinf_obs": 8.041989128582603,
+      "lambda_z": 0.09235822474662976,
+      "half_life": 7.504985965911378,
+      "auc_percent_extrapolated": 0.8317414176582629,
+      "clearance_L_per_h": 0.9989357709123836,
+      "clearance_L_per_h_per_kg": 0.09989357709123836,
+      "clearance_mL_per_min_per_kg": 1.6648929515206394,
+      "volume_z_L": 10.815883194515774,
+      "volume_z_L_per_kg": 1.0815883194515774,
+      "volume_ss_L": 8.03343060982967,
+      "volume_ss_L_per_kg": 0.803343060982967,
+      "lambda_z_r_squared": 0.9960516846297681
+    },
+    "ivive": {
+      "clint_u_in_vitro": 3.8095238095238098,
+      "clint_u_liver_L_per_h": 8.90057142857143,
+      "hepatic_plasma_clearance_L_per_h": 0.30096495368274495,
+      "hepatic_plasma_clearance_L_per_h_per_kg": 0.030096495368274495,
+      "hepatic_plasma_clearance_mL_per_min_per_kg": 0.5016082561379083,
+      "extraction_ratio_plasma": 0.022713413876685233,
+      "clearance_classification": "Low"
+    },
+    "comparison": {
+      "predicted_to_observed_ratio": 0.3012855905719113,
+      "fold_error": 3.3191099451578934,
+      "percent_error": -69.87144094280887,
+      "within_2_fold": false,
+      "within_3_fold": false
+    }
+  }
+}
